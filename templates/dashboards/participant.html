@@ -1,0 +1,30 @@
+
+{% block content %}
+<div class="container mt-4">
+  <h2>📦 Mes propositions de dons</h2>
+  {% for proposition in propositions %}
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5>Proposition #{{ proposition.id }} - {{ proposition.type_materiel }}</h5>
+        <p><strong>Quantité:</strong> {{ proposition.quantite }}</p>
+        <p><strong>État:</strong> {{ proposition.get_etat_display }}</p>
+        <p><strong>Description:</strong> {{ proposition.description }}</p>
+        <p><strong>Adresse:</strong> {{ proposition.adresse_ramassage }}, {{ proposition.ville }} {{ proposition.code_postal }}</p>
+        <p><strong>Disponibilité:</strong> {{ proposition.disponibilite_ramassage }}</p>
+        <p><strong>Statut transporteur:</strong> {{ proposition.get_transporteur_statut_display }}</p>
+
+        {% if not proposition.donator_gives %}
+          <form method="post" action="{% url 'confirmer_remise_donateur' proposition.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">✅ Confirmer remise effectuée</button>
+          </form>
+        {% else %}
+          <p><strong>Remise confirmée par vous ✅</strong></p>
+        {% endif %}
+      </div>
+    </div>
+  {% empty %}
+    <p>Aucune proposition de don.</p>
+  {% endfor %}
+</div>
+{% endblock %}

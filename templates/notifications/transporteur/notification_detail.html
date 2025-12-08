@@ -1,0 +1,41 @@
+{% block content %}
+<div class="container mt-4">
+  <h2>🔔 Notification détail</h2>
+  <h4>{{ notif.titre }}</h4>
+  <p>{{ notif.message|linebreaks }}</p>
+  <small>Reçue le {{ notif.date_creation|date:"d/m/Y H:i" }}</small>
+
+  {% if notif.proposition %}
+    <hr>
+    <h3>Proposition #{{ proposition.id }} - {{ proposition.type_materiel }}</h3>
+    <p><strong>Donateur:</strong> {{ proposition.participant_donateur }}</p>
+    <p><strong>Quantité:</strong> {{ proposition.quantite }}</p>
+    <p><strong>État:</strong> {{ proposition.get_etat_display }}</p>
+    <p><strong>Description:</strong> {{ proposition.description }}</p>
+    <p><strong>tr statut:</strong> {{ proposition.transporteur_statut }}</p>
+    <p><strong>Adresse ramassage:</strong> {{ proposition.adresse_ramassage }}, {{ proposition.ville }} {{ proposition.code_postal }}</p>
+    <p><strong>Disponibilité:</strong> {{ proposition.disponibilite_ramassage }}</p>
+    {% if proposition.photos %}
+      <img src="{{ proposition.photos.url }}" class="img-fluid mt-2" alt="Photo du don">
+    {% endif %}
+
+    {% if proposition.transporteur_statut == "en_attente" %}
+      <form method="post" action="{% url 'transporteur_reponse' proposition.id %}" class="mt-3">
+        {% csrf_token %}
+        <button type="submit" name="action" value="accepter" class="btn btn-success">✅ Accepter</button>
+        <button type="submit" name="action" value="refuser" class="btn btn-danger">❌ Refuser</button>
+      </form>
+    {% elif proposition.transporteur_statut == "acceptee" %}
+      <p><strong>Vous avez accepté cette mission.</strong></p>
+    {% elif proposition.transporteur_statut == "refusee" %}
+      <p><strong>Vous avez refusé cette mission.</strong></p>
+    {% endif %}
+  {% endif %}
+
+  <form method="post" action="{% url 'transporteur_dashboard'%}">
+    {% csrf_token %}
+    <button type="submit">✅ Marquer comme terminée</button>
+</form>
+
+</div>
+{% endblock %}

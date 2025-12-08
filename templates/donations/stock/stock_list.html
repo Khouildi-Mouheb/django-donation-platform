@@ -1,0 +1,23 @@
+
+{% block content %}
+<div class="container mt-4">
+  <h2>📦 Stock des dons</h2>
+  {% for don in dons %}
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5>{{ don.reference }} - {{ don.type_materiel }}</h5>
+        <p><strong>Quantité:</strong> {{ don.quantite }}</p>
+        <p><strong>État:</strong> {{ don.get_etat_display }}</p>
+        <p><strong>Statut:</strong> {{ don.get_statut_display }}</p>
+        <p><strong>Lieu stockage:</strong> {{ don.lieu_stockage }}</p>
+        <p><strong>Date entrée:</strong> {{ don.date_entree_stock }}</p>
+        {% if don.photos %}
+          <img src="{{ don.photos.url }}" alt="Photo du don" class="img-fluid mt-2" style="max-width:200px;">
+        {% endif %}
+      </div>
+    </div>
+  {% empty %}
+    <p>Aucun don en stock.</p>
+  {% endfor %}
+</div>
+{% endblock %}

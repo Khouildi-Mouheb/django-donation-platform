@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+</head>
+<body>
+    <h2>Welcome, {{ user.username }}!</h2>
+
+    {% if user.is_authenticated and user.user_type == "participant" %}
+    <h3>Participant Actions</h3>
+    <ul>
+        <li><a href="{% url 'participant_donations' %}">📦 Mes dons</a></li>
+        <li><a href="{% url 'create_proposition' %}">➕ Créer une proposition</a></li>
+    </ul>
+{% endif %}
+
+
+    {% if user.is_authenticated %}
+        <p>You are logged in as a {{ user.user_type }}.</p>
+        <a href="{% url 'create_proposition' %}">create proposition</a>
+        <a href="{% url 'logout' %}">Logout</a>
+    {% else %}
+        <p><a href="{% url 'login' %}">Login</a> or <a href="{% url 'register' %}">Register</a></p>
+    {% endif %}
+
+    {% if user.is_authenticated and user.user_type == "admin" %}
+        <h3>Admin Actions</h3>
+        <ul>
+            <li><a href="{% url 'create_admin' %}">Create Admin</a></li>
+            <li><a href="{% url 'create_membre' %}">Create Membre</a></li>
+            <li><a href="{% url 'create_transporteur' %}">Create Transporteur</a></li>
+            
+        </ul>
+    {% endif %}
+
+    {% if user.is_authenticated and user.user_type == "membre" %}
+        <a href="{% url 'membre_dashboard' %}">tritements des demandes</a>
+    {% endif %}
+
+    {% if user.is_authenticated and user.user_type == "transporteur" %}
+    <h3>Transporteur Actions</h3>
+    <ul>
+        <a href="{% url 'transporteur_dashboard' %}">Transporteur Dashboard</a>
+
+        <li><a href="{% url 'transporteur_notifications' %}">📬 Voir mes notifications</a></li>
+    </ul>
+{% endif %}
+
+{% if user.is_authenticated and user.user_type == "membre" %}
+    <a href="{% url 'membre_dashboard' %}">Traitements des demandes</a>
+    <a href="{% url 'stock_list' %}">📦 Voir le stock</a>
+{% endif %}
+
+
+
+</body>
+</html>

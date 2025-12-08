@@ -1,0 +1,29 @@
+
+{% block content %}
+<div class="container mt-4">
+  <h2>🚚 Mes missions acceptées</h2>
+  {% for proposition in propositions %}
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5>Proposition #{{ proposition.id }} - {{ proposition.type_materiel }}</h5>
+        <p><strong>Quantité:</strong> {{ proposition.quantite }}</p>
+        <p><strong>État:</strong> {{ proposition.get_etat_display }}</p>
+        <p><strong>Adresse:</strong> {{ proposition.adresse_ramassage }}, {{ proposition.ville }} {{ proposition.code_postal }}</p>
+        <p><strong>Disponibilité:</strong> {{ proposition.disponibilite_ramassage }}</p>
+        <p><strong>Statut:</strong> {{ proposition.get_statut_display }}</p>
+
+        {% if proposition.statut != "terminee" %}
+          <form method="post" action="{% url 'terminer_proposition' proposition.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">✅ Marquer comme terminée</button>
+          </form>
+        {% else %}
+          <p><strong>Mission terminée ✅</strong></p>
+        {% endif %}
+      </div>
+    </div>
+  {% empty %}
+    <p>Aucune mission acceptée.</p>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% block content %}
+<div class="container mt-4">
+  <h2>Proposition #{{ proposition.id }} - {{ proposition.type_materiel }}</h2>
+  <p><strong>Donateur:</strong> {{ proposition.participant_donateur }}</p>
+  <p><strong>Quantité:</strong> {{ proposition.quantite }}</p>
+  <p><strong>État:</strong> {{ proposition.get_etat_display }}</p>
+  <p><strong>Description:</strong> {{ proposition.description }}</p>
+  <p><strong>Adresse ramassage:</strong> {{ proposition.adresse_ramassage }}, {{ proposition.ville }} {{ proposition.code_postal }}</p>
+  <p><strong>Disponibilité:</strong> {{ proposition.disponibilite_ramassage }}</p>
+  <p><strong>Statut:</strong> {{ proposition.get_statut_display }}</p>
+  {% if proposition.photos %}
+    <img src="{{ proposition.photos.url }}" class="img-fluid mt-2" alt="Photo du don">
+  {% endif %}
+
+  {% if proposition.statut == "en_attente" %}
+    <form method="post" action="{% url 'traiter_proposition' proposition.id %}" class="mt-3">
+      {% csrf_token %}
+      <button type="submit" name="action" value="valider" class="btn btn-success">Valider</button>
+      <textarea name="raison_refus" class="form-control mt-2" placeholder="Raison du refus"></textarea>
+      <button type="submit" name="action" value="refuser" class="btn btn-danger mt-2">Refuser</button>
+    </form>
+  {% else %}
+    <p><em>Déjà traité par {{ proposition.membre_validateur }}</em></p>
+
+    {% if proposition.statut == "validee" and not proposition.transporteur_assignee %}
+      <a href="{% url 'assign_transporteur' proposition.id %}" class="btn btn-primary mt-3">
+        🚚 Assigner un transporteur
+      </a>
+    {% elif proposition.transporteur_assignee %}
+      <p><strong>Transporteur assigné:</strong> {{ proposition.transporteur_assignee }}</p>
+    {% endif %}
+  {% endif %}
+
+  {% if user.user_type == "membre" and proposition.statut in "validee terminee_donateur terminee_transporteur" %}
+  <a href="{% url 'ajouter_au_stock' proposition.id %}" class="btn btn-primary mt-3">
+    📦 Ajouter au stock
+  </a>
+{% endif %}
+
+</div>
+{% endblock %}

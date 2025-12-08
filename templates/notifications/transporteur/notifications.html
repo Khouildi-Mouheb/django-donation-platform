@@ -1,0 +1,20 @@
+{% block content %}
+<div class="container mt-4">
+  <h2>📬 Mes notifications</h2>
+  {% for notif in notifications %}
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5>{{ notif.titre }}</h5>
+        <p>{{ notif.message|linebreaks }}</p>
+        <small>Reçue le {{ notif.date_creation|date:"d/m/Y H:i" }}</small>
+
+        <a href="{% url 'notification_detail' notif.id %}" class="btn btn-info mt-2">
+          🔍 Voir détails
+        </a>
+      </div>
+    </div>
+  {% empty %}
+    <p>Aucune notification.</p>
+  {% endfor %}
+</div>
+{% endblock %}
