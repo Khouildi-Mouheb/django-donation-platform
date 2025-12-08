@@ -1,12 +1,12 @@
 from django import forms 
-from .models import User
+from .models import User , Participant
 
 class RegisterForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)
 
     class Meta:
-        model = User
-        fields = ["username", "email", "password"]  # no user_type field
+        model = Participant
+        fields = ["username", "email", "password", "phone", "address"]
 
 
 class AdminCreateForm(forms.ModelForm):

@@ -53,15 +53,11 @@ def register_view(request):
     if request.method == "POST":
         form = RegisterForm(request.POST)
         if form.is_valid():
-            user = form.save(commit=False)
-            user.set_password(form.cleaned_data["password"])
-            user.user_type = "participant"   # force default type
-            user.save()
-
-            # Create Participant row automatically
-            Participant.objects.create(id=user.id, username=user.username, email=user.email, user_type="participant", password=user.password)
-
-            login(request, user)
+            participant = form.save(commit=False)
+            participant.set_password(form.cleaned_data["password"])
+            participant.user_type = "participant"
+            participant.save()
+            login(request, participant)
             return redirect("home")
     else:
         form = RegisterForm()
