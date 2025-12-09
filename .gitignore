@@ -1,2 +1,9 @@
 project/db.sqlite3
 propositions
+
+
+.trunk
+project/db.sqlite3
+propositions/
+
+db.sqlite3
