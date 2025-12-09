@@ -9,3 +9,15 @@ propositions/
 
 
 db.sqlite3
+
+
+# Ignore SQLite database
+db.sqlite3
+
+# Ignore migrations
+*/migrations/
+
+# Ignore compiled files
+*.pyc
+__pycache__/
+
