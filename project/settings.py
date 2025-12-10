@@ -31,6 +31,10 @@ INSTALLED_APPS = [
     'users',
     'donations',
     'notifications',
+    'messaging',
+    'rest_framework',
+    'channels',
+
 ]
 
 MIDDLEWARE = [

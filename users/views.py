@@ -21,6 +21,25 @@ from notifications.models import Notification
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from donations.models import Don
+from django.http import JsonResponse
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+def get_user(request, user_id):
+    try:
+        u = User.objects.get(id=user_id)
+        return JsonResponse({
+            "id": u.id,
+            "username": u.username,
+            "type": u.user_type,
+        })
+    except User.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=404)
+
+
+
+
 
 
 

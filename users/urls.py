@@ -5,7 +5,8 @@ from .views import (
     membre_dashboard, assign_transporteur_view,
     transporteur_notifications, notification_detail,
     transporteur_reponse, transporteur_dashboard,
-    terminer_proposition,   # ✅ make sure this is imported
+    terminer_proposition, 
+    get_user,  # ✅ make sure this is imported
 )
 
 urlpatterns = [
@@ -35,6 +36,9 @@ urlpatterns = [
 
     # Transporteur marks a proposition as terminée
     path("dashboard/transporteur/proposition/<int:proposition_id>/terminer/", terminer_proposition, name="terminer_proposition"),
+    path("api/user/<int:user_id>/", get_user),
+    
+
     
 
 ]

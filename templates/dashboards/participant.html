@@ -38,6 +38,17 @@
 
         {% if proposition.membre_validateur %}
           <p><strong>Membre validateur :</strong> {{ proposition.membre_validateur }}</p>
+          {% if proposition.membre_validateur %}
+  <p><strong>Membre validateur:</strong> {{ proposition.membre_validateur }}</p>
+  <a href="{% url 'chat_room' user.id proposition.membre_validateur.id %}" 
+     class="btn btn-primary mt-3">
+    💬 Contacter le membre
+  </a>
+{% else %}
+  <p><strong>Membre validateur :</strong> Votre proposition n’a pas encore été traitée</p>
+{% endif %}
+
+
         {% else %}
           <p><strong>Membre validateur :</strong> Votre proposition n’a pas encore été traitée</p>
         {% endif %}

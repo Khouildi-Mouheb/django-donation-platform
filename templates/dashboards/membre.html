@@ -15,7 +15,7 @@
 
   <h2 class="mb-4">📋 Tableau de bord Membre</h2>
 
-  <!-- ❗ Demandess -->
+  <!-- ❗ Demandes -->
   <h3 class="mt-4">Demandes de dons</h3>
   {% for demande in demandes %}
     <div class="card mb-3 shadow-sm">
@@ -70,9 +70,18 @@
         <p><strong>Statut :</strong> {{ proposition.get_statut_display }}</p>
         <p><strong>Donateur :</strong> {{ proposition.participant_donateur }}</p>
 
+        <!-- Voir détails -->
         <a href="{% url 'proposition_detail' proposition.id %}" class="btn btn-info">
           Voir détails
         </a>
+
+        <!-- Contacter le participant -->
+        {% if proposition.participant_donateur %}
+        <a href="{% url 'chat_room' user.id proposition.participant_donateur.id %}" 
+           class="btn btn-primary mt-2">
+          💬 Contacter le participant
+        </a>
+        {% endif %}
 
         {% if proposition.statut == "en_attente" %}
           <form method="post" action="{% url 'traiter_proposition' proposition.id %}" class="mt-3">
