@@ -19,18 +19,22 @@
 </head>
 <body>
 <div class="container mt-4">
-    <h2>💬 Chat avec {{ receiver.get_full_name }}</h2>
+    <h2>💬 Chat avec {{ receiver.username }}</h2>
 
     <div id="messages" class="mb-3">
     {% for msg in messages %}
         {% if msg.sender == user %}
             <div class="message-sent">
                 <strong>{{ msg.sender.username }}:</strong> {{ msg.text }}
+                
             </div>
+            <br>
         {% else %}
             <div class="message-received">
                 <strong>{{ msg.sender.username }}:</strong> {{ msg.text }}
+                
             </div>
+            <br>
         {% endif %}
     {% endfor %}
 </div>

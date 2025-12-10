@@ -64,6 +64,12 @@ TEMPLATES = [
     },
 ]
 
+
+STATIC_URL = '/static/'
+# If you have a global static folder
+STATICFILES_DIRS = [BASE_DIR / "static"]
+
+
 WSGI_APPLICATION = 'project.wsgi.application'
 
 
