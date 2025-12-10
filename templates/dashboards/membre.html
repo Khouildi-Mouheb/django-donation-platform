@@ -1,58 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+
+    <!-- BOOTSTRAP CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <title>Tableau de bord Membre</title>
+</head>
+<body>
+
 {% block content %}
 <div class="container mt-4">
-  <h2>📋 Tableau de bord Membre</h2>
 
-  <h3>Demandes de dons</h3>
+  <h2 class="mb-4">📋 Tableau de bord Membre</h2>
+
+  <!-- ❗ Demandess -->
+  <h3 class="mt-4">Demandes de dons</h3>
   {% for demande in demandes %}
-    <div class="card mb-3">
+    <div class="card mb-3 shadow-sm">
       <div class="card-body">
-        <h5>Demande #{{ demande.id }} - {{ demande.type_materiel }}</h5>
-        <p><strong>Statut:</strong> {{ demande.get_statut_display }}</p>
+
+        <h5 class="card-title">Demande #{{ demande.id }} - {{ demande.type_materiel }}</h5>
+        <p><strong>Statut :</strong> {{ demande.get_statut_display }}</p>
+
         {% if demande.statut == "en_attente" %}
           <form method="post" action="{% url 'traiter_demande' demande.id %}">
             {% csrf_token %}
-            <button type="submit" name="action" value="valider" class="btn btn-success">Valider</button>
+
+            <button type="submit" name="action" value="valider" class="btn btn-success">
+              Valider
+            </button>
+
             <textarea name="raison_refus" class="form-control mt-2" placeholder="Raison du refus"></textarea>
-            <button type="submit" name="action" value="refuser" class="btn btn-danger mt-2">Refuser</button>
+
+            <button type="submit" name="action" value="refuser" class="btn btn-danger mt-2">
+              Refuser
+            </button>
           </form>
         {% endif %}
+
       </div>
     </div>
   {% empty %}
-    <p>Aucune demande.</p>
+    <div class="alert alert-info">Aucune demande.</div>
   {% endfor %}
 
+  <!-- ❗ Transporteurs -->
+  <h3 class="mt-5">Transporteurs</h3>
   {% for transporteur in transporteurs %}
-    <div class="card mb-3">
+    <div class="card mb-3 shadow-sm">
       <div class="card-body">
-        <h5>transporteur #{{ transporteur.id }} - {{ transporteur.username }}</h5>
-        <p><strong>disponibilite:</strong> {{ transporteur.disponibilite }}</p>
+        <h5 class="card-title">Transporteur #{{ transporteur.id }} - {{ transporteur.username }}</h5>
+        <p><strong>Disponibilité :</strong> {{ transporteur.disponibilite }}</p>
       </div>
     </div>
   {% empty %}
-    <p>Aucune transporteur.</p>
+    <div class="alert alert-info">Aucun transporteur.</div>
   {% endfor %}
 
+  <!-- ❗ Propositions -->
   <h3 class="mt-5">Propositions de dons</h3>
   {% for proposition in propositions %}
-    <div class="card mb-3">
+    <div class="card mb-3 shadow-sm">
       <div class="card-body">
-        <h5>Proposition #{{ proposition.id }} - {{ proposition.type_materiel }}</h5>
-        <p><strong>Statut:</strong> {{ proposition.get_statut_display }}</p>
-        <p><strong>Donateur:</strong> {{ proposition.participant_donateur }}</p>
-        <a href="{% url 'proposition_detail' proposition.id %}" class="btn btn-info">Voir détails</a>
+
+        <h5 class="card-title">Proposition #{{ proposition.id }} - {{ proposition.type_materiel }}</h5>
+
+        <p><strong>Statut :</strong> {{ proposition.get_statut_display }}</p>
+        <p><strong>Donateur :</strong> {{ proposition.participant_donateur }}</p>
+
+        <a href="{% url 'proposition_detail' proposition.id %}" class="btn btn-info">
+          Voir détails
+        </a>
+
         {% if proposition.statut == "en_attente" %}
-          <form method="post" action="{% url 'traiter_proposition' proposition.id %}" class="mt-2">
+          <form method="post" action="{% url 'traiter_proposition' proposition.id %}" class="mt-3">
             {% csrf_token %}
-            <button type="submit" name="action" value="valider" class="btn btn-success">Valider</button>
+
+            <button type="submit" name="action" value="valider" class="btn btn-success">
+              Valider
+            </button>
+
             <textarea name="raison_refus" class="form-control mt-2" placeholder="Raison du refus"></textarea>
-            <button type="submit" name="action" value="refuser" class="btn btn-danger mt-2">Refuser</button>
+
+            <button type="submit" name="action" value="refuser" class="btn btn-danger mt-2">
+              Refuser
+            </button>
+
           </form>
         {% endif %}
+
       </div>
     </div>
   {% empty %}
-    <p>Aucune proposition.</p>
+    <div class="alert alert-info">Aucune proposition.</div>
   {% endfor %}
+
 </div>
 {% endblock %}
+
+<!-- BOOTSTRAP JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

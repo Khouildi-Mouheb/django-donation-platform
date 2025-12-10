@@ -42,7 +42,7 @@ class PropositionDon(models.Model):
     ('terminee', 'Terminée'),
     )
     statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='en_attente')
-
+    
 
 
     participant_donateur = models.ForeignKey(
