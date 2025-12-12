@@ -242,6 +242,15 @@ def transporteur_reponse(request, proposition_id):
 @login_required
 def notification_detail(request, notif_id):
     notif = get_object_or_404(Notification, id=notif_id)
+    demande=notif.demande
+    if request.method=="POST":
+        action=request.POST.get("action")
+        if action=="marquer comme terminer":
+            demande.statut="terminee"
+            demande.transporteur_confirme=True
+            demande.save()
+            messages.success(request,f"Demande #{demande.id} marquée comme terminée.")
+            return redirect('transporteur_dashboard')
 
     notif.lu = True
     notif.save()

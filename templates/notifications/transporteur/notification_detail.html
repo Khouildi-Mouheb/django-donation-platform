@@ -77,6 +77,11 @@
 
   <form method="post" action="{% url 'transporteur_dashboard' %}" class="mt-4">
       {% csrf_token %}
+      {% if user.is_authenticated and user.user_type == "transporteur" %}
+            <h3>Participant Actions</h3>
+
+            <button name="action">marquer comme terminer</button>
+      {% endif %} 
       <button type="submit" class="btn btn-primary">⬅️ Retour au tableau de bord</button>
   </form>
 

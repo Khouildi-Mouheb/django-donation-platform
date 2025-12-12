@@ -195,11 +195,13 @@ class DemandeDon(models.Model):
     ville = models.CharField(max_length=100)
     code_postal = models.CharField(max_length=10)
     disponibilite_livraison = models.TextField(blank=True)
-
     don_attribue = models.ForeignKey(Don, on_delete=models.SET_NULL, null=True, blank=True, related_name='demandes_attribuees')
     date_attribution = models.DateTimeField(null=True, blank=True)
     transporteur_livraison = models.ForeignKey(Transporteur, on_delete=models.SET_NULL, null=True, blank=True)
     date_livraison = models.DateField(null=True, blank=True)
+    transporteur_confirme = models.BooleanField(default=False)
+
+
 
     class Meta:
         verbose_name = "Demande de don"
