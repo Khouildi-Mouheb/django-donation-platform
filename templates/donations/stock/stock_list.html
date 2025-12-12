@@ -20,7 +20,7 @@
     <div class="card mb-3 shadow-sm">
       <div class="card-body">
         <h5 class="fw-bold">{{ don.reference }} - {{ don.type_materiel }}</h5>
-
+        <p>categorie : {{don.categorie}}</p>
         <p><strong>Quantité:</strong> {{ don.quantite }}</p>
         <p><strong>État:</strong> {{ don.get_etat_display }}</p>
         <p><strong>Statut:</strong> {{ don.get_statut_display }}</p>

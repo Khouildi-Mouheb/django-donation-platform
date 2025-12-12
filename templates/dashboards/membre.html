@@ -22,23 +22,12 @@
       <div class="card-body">
 
         <h5 class="card-title">Demande #{{ demande.id }} - {{ demande.type_materiel }}</h5>
+        <a href="{% url 'demande_detail' demande.id %}" class="btn btn-info">
+          Voir détails
+        </a>
         <p><strong>Statut :</strong> {{ demande.get_statut_display }}</p>
 
-        {% if demande.statut == "en_attente" %}
-          <form method="post" action="{% url 'traiter_demande' demande.id %}">
-            {% csrf_token %}
-
-            <button type="submit" name="action" value="valider" class="btn btn-success">
-              Valider
-            </button>
-
-            <textarea name="raison_refus" class="form-control mt-2" placeholder="Raison du refus"></textarea>
-
-            <button type="submit" name="action" value="refuser" class="btn btn-danger mt-2">
-              Refuser
-            </button>
-          </form>
-        {% endif %}
+        
 
       </div>
     </div>

@@ -25,6 +25,8 @@ class CategorieObjet(models.Model):
 
 
 class PropositionDon(models.Model):
+
+
     """Donor Participant suggests a donation"""
     ETAT_CHOICES = (
         ('neuf', 'Neuf'),
@@ -152,6 +154,8 @@ class Don(models.Model):
 
 
 class DemandeDon(models.Model):
+
+
     """Participant requests a donation"""
     URGENCE_CHOICES = (
         ('faible', 'Faible'),

@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .forms import PropositionDonForm
+from .forms import PropositionDonForm , DemandeDonForm
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
@@ -8,6 +8,7 @@ from django.contrib import messages
 from .models import DemandeDon
 from .models import PropositionDon , Don
 from users.views import getAvailableTransporteurs
+from users.models import Transporteur
 
 
 @login_required
@@ -182,4 +183,106 @@ def ajouter_au_stock(request, proposition_id):
     )
     messages.success(request, f"Proposition #{proposition.id} ajoutée au stock comme Don #{don.reference}.")
     return redirect('membre_dashboard')
+
+
+@participant_required
+def create_demande(request):
+    if request.method == "POST":
+        form = DemandeDonForm(request.POST)
+        if form.is_valid():
+            demande = form.save(commit=False)
+            demande.statut = "en_attente"
+            # Link the logged-in participant to the proposition
+            demande.participant_requerant = request.user.participant
+            demande.save()
+            messages.success(request, "Votre proposition de don a été créée avec succès.")
+            return redirect("home")  # you can define a list view later
+    else:
+        form = DemandeDonForm()
+    return render(request, "donations/demandes/create_demande.html", {"form": form})
+
+
+
+def demande_detail(request , demande_id):
+    demande=get_object_or_404(DemandeDon , id=demande_id)
+    if not hasattr(request.user, 'membre'):
+        messages.error(request, "Accès réservé aux membres.")
+        return redirect('home')
+
+    return render(request, 'donations/demandes/demande_detail.html', {
+        'demande': demande
+    })
+
+
+@login_required
+def traiter_demande(request,demande_id):
+    demande = get_object_or_404(DemandeDon, id=demande_id)
+
+    if not hasattr(request.user, 'membre'):
+        messages.error(request, "Accès réservé aux membres.")
+        return redirect('membre_dashboard')
+
+    if request.method == "POST":
+        action = request.POST.get('action')
+        if action == "valider":
+            demande.statut = "validee"
+            demande.date_validation = timezone.now()
+            demande.membre_validateur = request.user.membre
+            demande.save()
+            messages.success(request, f"Proposition #{demande.id} validée.")
+        elif action == "refuser":
+            demande.statut = "refusee"
+            demande.date_validation = timezone.now()
+            demande.membre_validateur = request.user.membre
+            demande.raison_refus = request.POST.get('raison_refus', '')
+            demande.save()
+            messages.warning(request, f"Proposition #{demande.id} refusée.")
+    return redirect('membre_dashboard')
+
+
+
+def getDemandeRelatedItems(request , demande_id):
+    demande=get_object_or_404(DemandeDon, id=demande_id)
+    categorie=demande.categorie_recherchee
+    realted_items=Don.objects.filter(categorie=categorie)
+    return render(request, "donations/demandes/related_items.html",{"related_items":realted_items})
+
+from notifications.models import Notification
+
+@login_required
+def assign_transporteur_demande(request, demande_id):
+    demande = get_object_or_404(DemandeDon, id=demande_id)
+
+    # Ensure only Membre role can assign
+    if not hasattr(request.user, 'membre'):
+        messages.error(request, "Accès réservé aux membres.")
+        return redirect('membre_dashboard')
+
+    if request.method == "POST":
+        transporteur_id = request.POST.get("transporteur_id")
+        if transporteur_id:
+            transporteur = get_object_or_404(Transporteur, id=transporteur_id)
+            demande.transporteur_assignee = transporteur
+            demande.statut = "validee"  # still valid until transporteur responds
+            demande.date_validation = timezone.now()
+            demande.membre_validateur = request.user.membre
+            demande.save()
+
+            # Create notification for transporteur
+            Notification.objects.create(
+                receiver=transporteur,
+                demande=demande,
+                titre=f"Nouvelle mission: Proposition #{demande.id}",
+                message="Vous avez été assigné pour twasseel ce don."
+            )
+
+            messages.success(request, f"Transporteur {transporteur} assigné à la proposition #{demande.id}.")
+            return redirect('membre_dashboard')  # ✅ always return something
+
+    # If GET request, show a form to choose transporteur
+    available_transporteurs = getAvailableTransporteurs()
+    return render(request, "donations/demandes/assign_transporteur.html", {
+        "proposidemandetion": demande,
+        "transporteurs": available_transporteurs
+    })
 

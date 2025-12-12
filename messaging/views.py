@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from .models import Message
+from django.shortcuts import render, get_object_or_404
 
 User = get_user_model()
 
@@ -25,16 +26,6 @@ def save_message(request):
     return Response({"status": "ok", "message_id": message.id})
 
 
-
-
-
-
-
-# messaging/views.py
-from django.shortcuts import render, get_object_or_404
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
 
 def chat_room(request, user_id, receiver_id):
     user = get_object_or_404(User, id=user_id)

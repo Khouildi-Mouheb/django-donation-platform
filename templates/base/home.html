@@ -4,10 +4,13 @@
     <title>Home</title>
 </head>
 <body>
-    <h2>Welcome, {{ user.username }}!</h2>
+    <h2>Welcome, {{ user.username }}!</h2>  
 
     {% if user.is_authenticated and user.user_type == "participant" %}
     <h3>Participant Actions</h3>
+
+    <a href="{% url 'create_demande' %}">create demande</a>
+    <br>
     <ul>
         <li><a href="{% url 'participant_donations' %}">📦 Mes dons</a></li>
         <li><a href="{% url 'create_proposition' %}">➕ Créer une proposition</a></li>
