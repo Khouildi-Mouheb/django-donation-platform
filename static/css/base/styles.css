@@ -1,0 +1,92 @@
+/* Add these styles to your existing styles.css */
+
+/* Badge styles */
+.badge-participant, .badge-membre, .badge-transporteur, .badge-admin {
+    padding: 0.35em 0.65em;
+    font-size: 0.75em;
+    font-weight: 600;
+    border-radius: 0.375rem;
+}
+
+.badge-participant {
+    background-color: #28a745;
+    color: white;
+}
+
+.badge-membre {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.badge-transporteur {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.badge-admin {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* Light green background */
+.bg-light-green {
+    background-color: rgba(40, 167, 69, 0.1);
+}
+
+/* Card hover effects */
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Button groups */
+.btn-group-vertical {
+    width: 100%;
+}
+
+/* Alert customization */
+.alert-success {
+    background-color: rgba(40, 167, 69, 0.1);
+    border-color: rgba(40, 167, 69, 0.2);
+    color: #155724;
+}
+
+/* Custom shadows */
+.shadow-sm {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+/* Back to top button styling (add to scripts.js) */
+.back-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background-color: #28a745;
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s;
+}
+
+.back-to-top.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.back-to-top:hover {
+    background-color: #218838;
+    transform: translateY(-3px);
+}

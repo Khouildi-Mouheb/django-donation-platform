@@ -1,0 +1,122 @@
+{% load static %}
+<nav class="navbar navbar-expand-lg navbar-custom">
+    <div class="container">
+        <!-- Brand/Logo -->
+        <a class="navbar-brand" href="{% url 'home' %}">
+            <img src="{% static 'images/logo.png' %}" alt="Logo" height="40">
+            <span class="brand-text">DonationHub</span>
+        </a>
+        
+        <!-- Mobile Toggle Button -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <!-- Navbar Content -->
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <!-- Left Side - Public Links -->
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'home' %}">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'stock_list' %}">Available Donations</a>
+                </li>
+                {% if user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'create_proposition' %}">Donate Items</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'create_demande' %}">Request Items</a>
+                </li>
+                {% endif %}
+            </ul>
+            
+            <!-- Right Side - User & Auth -->
+            <ul class="navbar-nav">
+                {% if user.is_authenticated %}
+                    <!-- Role-Based Admin Links -->
+                    {% if user.user_type == "admin" %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            Admin Management
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'create_admin' %}">Create Admin</a></li>
+                            <li><a class="dropdown-item" href="{% url 'create_membre' %}">Create Member</a></li>
+                            <li><a class="dropdown-item" href="{% url 'create_transporteur' %}">Create Transporter</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#">User Management</a></li>
+                            <li><a class="dropdown-item" href="#">System Reports</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Role-Based Member Links -->
+                    {% if user.user_type == "membre" %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'membre_dashboard' %}">Member Dashboard</a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Role-Based Transporteur Links -->
+                    {% if user.user_type == "transporteur" %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            Transporteur
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'transporteur_dashboard' %}">Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{% url 'transporteur_notifications' %}">
+                                Notifications 
+                                {% if user.transporteur.unread_notifications_count %}
+                                <span class="badge bg-danger">{{ user.transporteur.unread_notifications_count }}</span>
+                                {% endif %}
+                            </a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Role-Based Participant Links -->
+                    {% if user.user_type == "participant" %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'participant_donations' %}">My Donations</a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- User Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user"></i> {{ user.username }}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">
+                                <i class="fas fa-id-badge"></i> Role: {{ user.get_user_type_display|default:user.user_type }}
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-user-cog"></i> Profile</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog"></i> Settings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="post" action="{% url 'logout' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="fas fa-sign-out-alt"></i> Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <!-- Login/Register Links -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'register' %}">Register</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>

@@ -4,67 +4,605 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Register</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Create Account</title>
     <!-- Bootstrap 5 CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 20px 0;
+        }
+        .card {
+            border: none;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        .card-header {
+            border-radius: 20px 20px 0 0 !important;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 0.75rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .register-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            color: white;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #495057;
+        }
+        .input-group-text {
+            background-color: #f8f9fa;
+            border-right: none;
+        }
+        .input-group .form-control {
+            border-left: none;
+        }
+        .input-group .form-control:focus {
+            border-left: none;
+        }
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+        .password-strength {
+            height: 4px;
+            margin-top: 5px;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        .strength-0 { background-color: #dc3545; width: 20%; }
+        .strength-1 { background-color: #ff6b6b; width: 40%; }
+        .strength-2 { background-color: #ffd166; width: 60%; }
+        .strength-3 { background-color: #06d6a0; width: 80%; }
+        .strength-4 { background-color: #118ab2; width: 100%; }
+        
+        .password-requirements {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        .requirement {
+            margin-bottom: 2px;
+        }
+        .requirement.met {
+            color: #28a745;
+        }
+        .requirement.unmet {
+            color: #dc3545;
+        }
+        .requirement i {
+            width: 16px;
+        }
+        
+        .card-footer {
+            background-color: transparent;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        /* Error styling */
+        .error-input {
+            border-color: #dc3545 !important;
+        }
+        .error-input:focus {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
+        }
+        
+        /* Form field spacing */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Terms checkbox styling */
+        .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body>
 
-<div class="container mt-5">
+<div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Create Participant Account</h4>
+        <div class="col-md-8 col-lg-6">
+            
+            <div class="card">
+                <div class="card-header text-white">
+                    <div class="register-icon">
+                        <i class="bi bi-person-plus-fill"></i>
+                    </div>
+                    <h3 class="mb-1">Create Your Account</h3>
+                    <p class="mb-0 opacity-90">Join us as a participant</p>
                 </div>
-                <div class="card-body">
-                    <form method="post" novalidate>
+                
+                <div class="card-body p-4 p-md-5">
+                    <!-- Display form errors at the top -->
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Display messages -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                <i class="bi bi-info-circle me-2"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <form method="post" novalidate id="registrationForm">
                         {% csrf_token %}
-
-                        <!-- Username -->
-                        <div class="mb-3">
-                            <label for="id_username" class="form-label">Username</label>
-                            {{ form.username|add_class:"form-control" }}
+                        
+                        <div class="row">
+                            <!-- Username Field -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="id_username" class="form-label">
+                                        <i class="bi bi-person me-1"></i>Username
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-person-fill"></i>
+                                        </span>
+                                        {{ form.username|add_class:"form-control form-control-lg"|attr:"placeholder:Choose a username"|attr:"id:id_username" }}
+                                    </div>
+                                    {% if form.username.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.username.errors %}
+                                                <i class="bi bi-x-circle me-1"></i>{{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.</small>
+                                </div>
+                            </div>
+                            
+                            <!-- Email Field -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="id_email" class="form-label">
+                                        <i class="bi bi-envelope me-1"></i>Email Address
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-envelope-fill"></i>
+                                        </span>
+                                        {{ form.email|add_class:"form-control form-control-lg"|attr:"placeholder:your.email@example.com"|attr:"type:email"|attr:"id:id_email" }}
+                                    </div>
+                                    {% if form.email.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.email.errors %}
+                                                <i class="bi bi-x-circle me-1"></i>{{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
-
-                        <!-- Email -->
-                        <div class="mb-3">
-                            <label for="id_email" class="form-label">Email</label>
-                            {{ form.email|add_class:"form-control" }}
+                        
+                        <!-- Password Field -->
+                        <div class="form-group">
+                            <label for="id_password" class="form-label">
+                                <i class="bi bi-lock me-1"></i>Password
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-key-fill"></i>
+                                </span>
+                                {{ form.password|add_class:"form-control form-control-lg"|attr:"placeholder:Create a strong password"|attr:"id:id_password"|attr:"type:password" }}
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="bi bi-eye" id="toggleIcon"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Password Strength Meter -->
+                            <div class="password-strength mt-2" id="passwordStrength"></div>
+                            
+                            <!-- Password Requirements -->
+                            <div class="password-requirements mt-3">
+                                <div class="requirement" id="reqLength">
+                                    <i class="bi bi-circle me-1"></i>At least 8 characters
+                                </div>
+                                <div class="requirement" id="reqUppercase">
+                                    <i class="bi bi-circle me-1"></i>Contains uppercase letter
+                                </div>
+                                <div class="requirement" id="reqLowercase">
+                                    <i class="bi bi-circle me-1"></i>Contains lowercase letter
+                                </div>
+                                <div class="requirement" id="reqNumber">
+                                    <i class="bi bi-circle me-1"></i>Contains number
+                                </div>
+                                <div class="requirement" id="reqSpecial">
+                                    <i class="bi bi-circle me-1"></i>Contains special character
+                                </div>
+                            </div>
+                            
+                            {% if form.password.errors %}
+                                <div class="text-danger small mt-2">
+                                    {% for error in form.password.errors %}
+                                        <i class="bi bi-x-circle me-1"></i>{{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
-
-                        <!-- Password -->
-                        <div class="mb-3">
-                            <label for="id_password" class="form-label">Password</label>
-                            {{ form.password|add_class:"form-control" }}
+                        
+                        <!-- Confirm Password Field (if your form has it) -->
+                        {% if form.password2 %}
+                        <div class="form-group">
+                            <label for="id_password2" class="form-label">
+                                <i class="bi bi-lock me-1"></i>Confirm Password
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-key-fill"></i>
+                                </span>
+                                {{ form.password2|add_class:"form-control form-control-lg"|attr:"placeholder:Confirm your password"|attr:"id:id_password2"|attr:"type:password" }}
+                            </div>
+                            <div class="mt-2" id="passwordMatch"></div>
+                            {% if form.password2.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.password2.errors %}
+                                        <i class="bi bi-x-circle me-1"></i>{{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
-
-                        <!-- Phone -->
-                        <div class="mb-3">
-                            <label for="id_phone" class="form-label">Phone</label>
-                            {{ form.phone|add_class:"form-control" }}
+                        {% endif %}
+                        
+                        <div class="row">
+                            <!-- Phone Field -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="id_phone" class="form-label">
+                                        <i class="bi bi-telephone me-1"></i>Phone Number
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-phone-fill"></i>
+                                        </span>
+                                        {{ form.phone|add_class:"form-control form-control-lg"|attr:"placeholder:+1 (123) 456-7890"|attr:"id:id_phone" }}
+                                    </div>
+                                    {% if form.phone.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.phone.errors %}
+                                                <i class="bi bi-x-circle me-1"></i>{{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Address Field -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="id_address" class="form-label">
+                                        <i class="bi bi-geo-alt me-1"></i>Address
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-house-fill"></i>
+                                        </span>
+                                        {{ form.address|add_class:"form-control form-control-lg"|attr:"placeholder:Your full address"|attr:"id:id_address" }}
+                                    </div>
+                                    {% if form.address.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.address.errors %}
+                                                <i class="bi bi-x-circle me-1"></i>{{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
-
-                        <!-- Address -->
-                        <div class="mb-3">
-                            <label for="id_address" class="form-label">Address</label>
-                            {{ form.address|add_class:"form-control" }}
+                        
+                        <!-- Terms and Conditions (Optional) -->
+                        <div class="form-group form-check mb-4">
+                            <input type="checkbox" class="form-check-input" id="termsCheck" required>
+                            <label class="form-check-label" for="termsCheck">
+                                I agree to the <a href="#" class="text-primary text-decoration-none">Terms & Conditions</a> and <a href="#" class="text-primary text-decoration-none">Privacy Policy</a>
+                            </label>
+                            <div class="invalid-feedback">
+                                You must agree to the terms and conditions
+                            </div>
                         </div>
-
-                        <button type="submit" class="btn btn-primary w-100">Sign Up</button>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg w-100 mb-4">
+                            <i class="bi bi-person-plus me-2"></i>Create Account
+                        </button>
+                        
+                        <!-- Social Sign Up Options -->
+                        <div class="text-center mb-3">
+                            <small class="text-muted">Or sign up with</small>
+                        </div>
+                        <div class="row g-2 mb-4">
+                            <div class="col">
+                                <a href="#" class="btn btn-outline-primary w-100">
+                                    <i class="bi bi-google me-2"></i>Google
+                                </a>
+                            </div>
+                            <div class="col">
+                                <a href="#" class="btn btn-outline-dark w-100">
+                                    <i class="bi bi-github me-2"></i>GitHub
+                                </a>
+                            </div>
+                            <div class="col">
+                                <a href="#" class="btn btn-outline-info w-100">
+                                    <i class="bi bi-twitter me-2"></i>Twitter
+                                </a>
+                            </div>
+                        </div>
+                        
                     </form>
                 </div>
-                <div class="card-footer text-center">
-                    <small>Already have an account? <a href="{% url 'login' %}">Login here</a></small>
+                
+                <div class="card-footer text-center py-3">
+                    <small class="text-muted">
+                        Already have an account? 
+                        <a href="{% url 'login' %}" class="text-primary text-decoration-none fw-bold">
+                            Sign in here
+                        </a>
+                    </small>
                 </div>
             </div>
-
+            
         </div>
     </div>
 </div>
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Password visibility toggle
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordInput = document.getElementById('id_password');
+        const toggleIcon = document.getElementById('toggleIcon');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.classList.remove('bi-eye');
+            toggleIcon.classList.add('bi-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.classList.remove('bi-eye-slash');
+            toggleIcon.classList.add('bi-eye');
+        }
+    });
+    
+    // Password strength checker
+    const passwordInput = document.getElementById('id_password');
+    const passwordStrength = document.getElementById('passwordStrength');
+    const requirements = {
+        length: document.getElementById('reqLength'),
+        uppercase: document.getElementById('reqUppercase'),
+        lowercase: document.getElementById('reqLowercase'),
+        number: document.getElementById('reqNumber'),
+        special: document.getElementById('reqSpecial')
+    };
+    
+    function checkPasswordStrength(password) {
+        let strength = 0;
+        
+        // Check length
+        if (password.length >= 8) {
+            strength++;
+            requirements.length.classList.add('met');
+            requirements.length.classList.remove('unmet');
+            requirements.length.querySelector('i').className = 'bi bi-check-circle me-1 text-success';
+        } else {
+            requirements.length.classList.remove('met');
+            requirements.length.classList.add('unmet');
+            requirements.length.querySelector('i').className = 'bi bi-circle me-1';
+        }
+        
+        // Check uppercase
+        if (/[A-Z]/.test(password)) {
+            strength++;
+            requirements.uppercase.classList.add('met');
+            requirements.uppercase.classList.remove('unmet');
+            requirements.uppercase.querySelector('i').className = 'bi bi-check-circle me-1 text-success';
+        } else {
+            requirements.uppercase.classList.remove('met');
+            requirements.uppercase.classList.add('unmet');
+            requirements.uppercase.querySelector('i').className = 'bi bi-circle me-1';
+        }
+        
+        // Check lowercase
+        if (/[a-z]/.test(password)) {
+            strength++;
+            requirements.lowercase.classList.add('met');
+            requirements.lowercase.classList.remove('unmet');
+            requirements.lowercase.querySelector('i').className = 'bi bi-check-circle me-1 text-success';
+        } else {
+            requirements.lowercase.classList.remove('met');
+            requirements.lowercase.classList.add('unmet');
+            requirements.lowercase.querySelector('i').className = 'bi bi-circle me-1';
+        }
+        
+        // Check numbers
+        if (/[0-9]/.test(password)) {
+            strength++;
+            requirements.number.classList.add('met');
+            requirements.number.classList.remove('unmet');
+            requirements.number.querySelector('i').className = 'bi bi-check-circle me-1 text-success';
+        } else {
+            requirements.number.classList.remove('met');
+            requirements.number.classList.add('unmet');
+            requirements.number.querySelector('i').className = 'bi bi-circle me-1';
+        }
+        
+        // Check special characters
+        if (/[^A-Za-z0-9]/.test(password)) {
+            strength++;
+            requirements.special.classList.add('met');
+            requirements.special.classList.remove('unmet');
+            requirements.special.querySelector('i').className = 'bi bi-check-circle me-1 text-success';
+        } else {
+            requirements.special.classList.remove('met');
+            requirements.special.classList.add('unmet');
+            requirements.special.querySelector('i').className = 'bi bi-circle me-1';
+        }
+        
+        // Update strength meter
+        passwordStrength.className = 'password-strength strength-' + strength;
+        
+        return strength;
+    }
+    
+    // Password match checker (if confirm password exists)
+    const password2Input = document.getElementById('id_password2');
+    if (password2Input) {
+        const passwordMatch = document.getElementById('passwordMatch');
+        
+        function checkPasswordMatch() {
+            const password = passwordInput.value;
+            const confirmPassword = password2Input.value;
+            
+            if (!confirmPassword) {
+                passwordMatch.innerHTML = '';
+                return;
+            }
+            
+            if (password === confirmPassword) {
+                passwordMatch.innerHTML = '<span class="text-success"><i class="bi bi-check-circle me-1"></i>Passwords match</span>';
+                password2Input.classList.remove('error-input');
+            } else {
+                passwordMatch.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle me-1"></i>Passwords do not match</span>';
+                password2Input.classList.add('error-input');
+            }
+        }
+        
+        passwordInput.addEventListener('input', checkPasswordMatch);
+        password2Input.addEventListener('input', checkPasswordMatch);
+    }
+    
+    // Real-time password strength checking
+    passwordInput.addEventListener('input', function() {
+        checkPasswordStrength(this.value);
+    });
+    
+    // Form validation
+    document.getElementById('registrationForm').addEventListener('submit', function(event) {
+        const requiredFields = this.querySelectorAll('[required]');
+        let isValid = true;
+        
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('error-input');
+                isValid = false;
+            }
+        });
+        
+        // Check terms and conditions
+        const termsCheck = document.getElementById('termsCheck');
+        if (!termsCheck.checked) {
+            termsCheck.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            termsCheck.classList.remove('is-invalid');
+        }
+        
+        // Check password strength if applicable
+        const password = passwordInput.value;
+        if (password && checkPasswordStrength(password) < 3) {
+            passwordInput.classList.add('error-input');
+            isValid = false;
+            if (!document.querySelector('.alert.alert-warning')) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-warning alert-dismissible fade show';
+                alertDiv.innerHTML = `
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Please choose a stronger password.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                this.insertBefore(alertDiv, this.firstChild);
+            }
+        }
+        
+        if (!isValid) {
+            event.preventDefault();
+            if (!document.querySelector('.alert.alert-danger')) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                alertDiv.innerHTML = `
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Please fill in all required fields correctly.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                this.insertBefore(alertDiv, this.firstChild);
+            }
+        }
+    });
+    
+    // Real-time validation
+    const formInputs = document.querySelectorAll('input');
+    formInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            if (this.value.trim()) {
+                this.classList.remove('error-input');
+            }
+        });
+        
+        input.addEventListener('blur', function() {
+            if (this.hasAttribute('required') && !this.value.trim()) {
+                this.classList.add('error-input');
+            }
+        });
+    });
+    
+    // Auto-focus on first field
+    document.addEventListener('DOMContentLoaded', function() {
+        const firstField = document.getElementById('id_username');
+        if (firstField) {
+            firstField.focus();
+        }
+    });
+    
+    // Phone number formatting (basic)
+    const phoneInput = document.getElementById('id_phone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 3 && value.length <= 6) {
+                value = value.replace(/(\d{3})(\d{0,3})/, '($1) $2');
+            } else if (value.length > 6) {
+                value = value.replace(/(\d{3})(\d{3})(\d{0,4})/, '($1) $2-$3');
+            }
+            e.target.value = value;
+        });
+    }
+</script>
+
 </body>
 </html>

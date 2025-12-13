@@ -1,73 +1,913 @@
-<!-- notifications/transporteur/notification_detail.html -->
-
+{% extends 'base/base.html' %}
 {% load static %}
+
+{% block title %}Détails de la Notification | DonationHub{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h2>Détails de la notification</h2>
-    <p><strong>Titre:</strong> {{ notif.titre }}</p>
-    <p><strong>Message:</strong> {{ notif.message }}</p>
-    <p><strong>Date:</strong> {{ notif.date_created }}</p>
-    
-    {% if demande %}
-        <hr>
-        <h4>Détails de la demande</h4>
-        <p><strong>ID:</strong> {{ demande.id }}</p>
-        <p><strong>Catégorie:</strong> {{ demande.categorie_recherchee }}</p>
-        <p><strong>Quantité:</strong> {{ demande.quantite_demandee }}</p>
-        <p><strong>Statut:</strong> {{ demande.get_statut_display }}</p>
-        <p><strong>Transporteur a confirmé:</strong> {{ demande.transporteur_confirme|yesno:"Oui,Non" }}</p>
-        
-        {% if not demande.transporteur_confirme %}
-            <!-- Form for accepting/refusing the mission -->
-            <form method="post">
-                {% csrf_token %}
-                <p>Voulez-vous accepter cette mission?</p>
-                <button type="submit" name="action" value="accepter" class="btn btn-success">Accepter la mission</button>
-                <button type="submit" name="action" value="refuser" class="btn btn-danger">Refuser la mission</button>
-            </form>
-        {% else %}
-            <!-- Form for marking as completed -->
-            <form method="post">
-                {% csrf_token %}
-                <button type="submit" name="action" value="marquer comme terminer" class="btn btn-primary">
-                    Marquer comme terminée
-                </button>
-            </form>
-        {% endif %}
-        
-    {% elif proposition %}
-        <hr>
-        <h4>Détails de la proposition</h4>
-        <p><strong>ID:</strong> {{ proposition.id }}</p>
-        <p><strong>Catégorie:</strong> {{ proposition.categorie }}</p>
-        <p><strong>Type de matériel:</strong> {{ proposition.type_materiel }}</p>
-        <p><strong>Quantité:</strong> {{ proposition.quantite }}</p>
-        <p><strong>Statut:</strong> {{ proposition.get_statut_display }}</p>
-        
-        {% if proposition.transporteur_statut %}
-            <!-- Form for marking as completed -->
-            <form method="post">
-                {% csrf_token %}
-                <button type="submit" name="action" value="accepter" class="btn btn-primary">
-                    accepter
-                </button>
-            </form>
-        {% endif %}
-        {% if proposition.donator_gives %}
-            <!-- Form for marking as completed -->
-            <form method="post">
-                {% csrf_token %}
-                <button type="submit" name="action" value="marquer comme terminer" class="btn btn-primary">
-                    marquer comme terminer
-                </button>
-            </form>
-        {% endif %}
-        
-    {% endif %}
-    
-    <a href="{% url 'transporteur_notifications' %}" class="btn btn-secondary mt-3">
-        Retour aux notifications
-    </a>
+    <!-- Header -->
+    <div class="dashboard-header mb-5">
+        <h1 class="display-5 fw-bold">
+            <i class="fas fa-bell me-2"></i> Détails de la notification
+        </h1>
+        <p class="lead text-muted">Informations complètes et actions disponibles</p>
+    </div>
+
+    <div class="row">
+        <!-- Left Column - Notification Details -->
+        <div class="col-lg-8">
+            <!-- Notification Card -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="card-title mb-0">
+                            <i class="fas fa-info-circle me-2"></i> Informations de la notification
+                        </h4>
+                        <span class="badge bg-light text-primary">
+                            {% if notif.lu %}
+                            <i class="fas fa-eye"></i> Lu
+                            {% else %}
+                            <i class="fas fa-eye-slash"></i> Non lu
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Notification Header -->
+                    <div class="notification-header mb-4">
+                        <div class="d-flex align-items-center">
+                            <div class="notification-icon-large 
+                                {% if demande %}bg-success
+                                {% elif proposition %}bg-info
+                                {% else %}bg-primary{% endif %} 
+                                me-3">
+                                <i class="fas 
+                                    {% if demande %}fa-hand-holding-heart
+                                    {% elif proposition %}fa-gift
+                                    {% else %}fa-bell{% endif %} 
+                                    fa-lg">
+                                </i>
+                            </div>
+                            <div>
+                                <h3 class="fw-bold mb-1">{{ notif.titre }}</h3>
+                                <p class="text-muted mb-0">
+                                    <i class="far fa-clock me-1"></i>
+                                    Reçue le {{ notif.date_creation|date:"d/m/Y à H:i" }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notification Message -->
+                    <div class="notification-message bg-light p-4 rounded mb-4">
+                        <h5 class="fw-bold text-primary mb-3">
+                            <i class="fas fa-envelope me-2"></i> Message
+                        </h5>
+                        <div class="message-content">
+                            {{ notif.message|linebreaks }}
+                        </div>
+                    </div>
+
+                    <!-- Related Item Details -->
+                    {% if demande %}
+                    <div class="demande-details">
+                        <div class="section-header d-flex align-items-center mb-4">
+                            <div class="section-icon bg-success me-3">
+                                <i class="fas fa-hand-holding-heart"></i>
+                            </div>
+                            <h4 class="fw-bold text-success mb-0">Détails de la demande</h4>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="detail-card mb-3">
+                                    <div class="card border-0 shadow-sm">
+                                        <div class="card-body">
+                                            <h6 class="fw-bold text-primary mb-3">
+                                                <i class="fas fa-info-circle me-2"></i> Informations de base
+                                            </h6>
+                                            <div class="info-grid">
+                                                <div class="info-item">
+                                                    <span class="label">ID</span>
+                                                    <span class="value fw-bold">#{{ demande.id }}</span>
+                                                </div>
+                                                <div class="info-item">
+                                                    <span class="label">Catégorie</span>
+                                                    <span class="value">{{ demande.categorie_recherchee.nom }}</span>
+                                                </div>
+                                                <div class="info-item">
+                                                    <span class="label">Type de matériel</span>
+                                                    <span class="value">{{ demande.type_materiel }}</span>
+                                                </div>
+                                                <div class="info-item">
+                                                    <span class="label">Quantité désirée</span>
+                                                    <span class="value badge bg-info">{{ demande.quantite_desiree }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="detail-card mb-3">
+                                    <div class="card border-0 shadow-sm">
+                                        <div class="card-body">
+                                            <h6 class="fw-bold text-primary mb-3">
+                                                <i class="fas fa-chart-line me-2"></i> Statut & Suivi
+                                            </h6>
+                                            <div class="info-grid">
+                                                <div class="info-item">
+                                                    <span class="label">Statut</span>
+                                                    <span class="value">
+                                                        <span class="badge 
+                                                            {% if demande.statut == 'validee' %}bg-success
+                                                            {% elif demande.statut == 'en_attente' %}bg-warning
+                                                            {% elif demande.statut == 'refusee' %}bg-danger
+                                                            {% else %}bg-secondary{% endif %}">
+                                                            {{ demande.get_statut_display }}
+                                                        </span>
+                                                    </span>
+                                                </div>
+                                                <div class="info-item">
+                                                    <span class="label">Transporteur confirmé</span>
+                                                    <span class="value">
+                                                        {% if demande.transporteur_confirme %}
+                                                        <span class="text-success">
+                                                            <i class="fas fa-check-circle"></i> Oui
+                                                        </span>
+                                                        {% else %}
+                                                        <span class="text-warning">
+                                                            <i class="fas fa-clock"></i> Non
+                                                        </span>
+                                                        {% endif %}
+                                                    </span>
+                                                </div>
+                                                <div class="info-item">
+                                                    <span class="label">Urgence</span>
+                                                    <span class="value">
+                                                        <span class="badge 
+                                                            {% if demande.urgence == 'elevee' %}bg-danger
+                                                            {% elif demande.urgence == 'moyenne' %}bg-warning
+                                                            {% else %}bg-info{% endif %}">
+                                                            {{ demande.get_urgence_display }}
+                                                        </span>
+                                                    </span>
+                                                </div>
+                                                <div class="info-item">
+                                                    <span class="label">Date de création</span>
+                                                    <span class="value">{{ demande.date_demande|date:"d/m/Y" }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Section for Demande -->
+                        <div class="action-section mt-5">
+                            <div class="card border-0 shadow-lg">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-tasks me-2"></i> Actions disponibles
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if not demande.transporteur_confirme %}
+                                    <!-- Accept/Refuse Mission -->
+                                    <div class="mission-confirmation">
+                                        <h6 class="fw-bold text-primary mb-4">
+                                            <i class="fas fa-question-circle me-2"></i> Confirmez-vous cette mission de livraison ?
+                                        </h6>
+                                        
+                                        <div class="alert alert-info d-flex align-items-center mb-4">
+                                            <i class="fas fa-info-circle me-3 fa-lg"></i>
+                                            <div>
+                                                <strong>Mission en attente de confirmation</strong>
+                                                <p class="mb-0">Vous devez accepter ou refuser cette mission avant de pouvoir la traiter.</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <form method="post" id="demandeActionForm">
+                                            {% csrf_token %}
+                                            
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <div class="action-card accept-action" onclick="selectDemandeAction('accepter')">
+                                                        <input type="radio" name="action" value="accepter" id="actionAcceptDemande" class="action-radio">
+                                                        <label for="actionAcceptDemande" class="action-label">
+                                                            <div class="action-icon bg-success">
+                                                                <i class="fas fa-check"></i>
+                                                            </div>
+                                                            <div class="action-content">
+                                                                <h6 class="fw-bold">Accepter la mission</h6>
+                                                                <p class="small mb-0">Je confirme pouvoir effectuer cette livraison</p>
+                                                            </div>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-md-6 mb-3">
+                                                    <div class="action-card refuse-action" onclick="selectDemandeAction('refuser')">
+                                                        <input type="radio" name="action" value="refuser" id="actionRefuseDemande" class="action-radio">
+                                                        <label for="actionRefuseDemande" class="action-label">
+                                                            <div class="action-icon bg-danger">
+                                                                <i class="fas fa-times"></i>
+                                                            </div>
+                                                            <div class="action-content">
+                                                                <h6 class="fw-bold">Refuser la mission</h6>
+                                                                <p class="small mb-0">Je ne peux pas effectuer cette livraison</p>
+                                                            </div>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Refusal Reason -->
+                                            <div id="demandeRefusalReason" class="mt-4" style="display: none;">
+                                                <label for="demandeRaisonRefus" class="form-label fw-bold">
+                                                    <i class="fas fa-comment me-2"></i> Raison du refus (optionnel)
+                                                </label>
+                                                <textarea name="raison_refus" id="demandeRaisonRefus" 
+                                                          class="form-control" rows="3" 
+                                                          placeholder="Expliquez pourquoi vous refusez cette mission..."></textarea>
+                                                <div class="form-text">Cette explication sera communiquée au membre</div>
+                                            </div>
+
+                                            <!-- Submit Button -->
+                                            <div class="text-center mt-4">
+                                                <button type="submit" class="btn btn-primary btn-lg px-5" id="submitDemandeBtn" disabled>
+                                                    <i class="fas fa-paper-plane me-2"></i> Confirmer la décision
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    {% else %}
+                                    <!-- Mark as Completed -->
+                                    <div class="mission-completion">
+                                        <div class="alert alert-success d-flex align-items-center mb-4">
+                                            <i class="fas fa-check-circle me-3 fa-lg"></i>
+                                            <div>
+                                                <strong>Mission acceptée</strong>
+                                                <p class="mb-0">Vous avez déjà accepté cette mission. Vous pouvez maintenant la marquer comme terminée.</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <form method="post">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="marquer comme terminer">
+                                            <div class="text-center">
+                                                <button type="submit" class="btn btn-success btn-lg px-5">
+                                                    <i class="fas fa-flag-checkered me-2"></i> Marquer comme terminée
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% elif proposition %}
+                    <div class="proposition-details">
+                        <div class="section-header d-flex align-items-center mb-4">
+                            <div class="section-icon bg-info me-3">
+                                <i class="fas fa-gift"></i>
+                            </div>
+                            <h4 class="fw-bold text-info mb-0">Détails de la proposition</h4>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="detail-card mb-3">
+                                    <div class="card border-0 shadow-sm">
+                                        <div class="card-body">
+                                            <h6 class="fw-bold text-primary mb-3">
+                                                <i class="fas fa-info-circle me-2"></i> Informations du don
+                                            </h6>
+                                            <div class="info-grid">
+                                                <div class="info-item">
+                                                    <span class="label">ID</span>
+                                                    <span class="value fw-bold">#{{ proposition.id }}</span>
+                                                </div>
+                                                <div class="info-item">
+                                                    <span class="label">Catégorie</span>
+                                                    <span class="value">{{ proposition.categorie.nom }}</span>
+                                                </div>
+                                                <div class="info-item">
+                                                    <span class="label">Type de matériel</span>
+                                                    <span class="value">{{ proposition.type_materiel }}</span>
+                                                </div>
+                                                <div class="info-item">
+                                                    <span class="label">Quantité</span>
+                                                    <span class="value badge bg-info">{{ proposition.quantite }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="detail-card mb-3">
+                                    <div class="card border-0 shadow-sm">
+                                        <div class="card-body">
+                                            <h6 class="fw-bold text-primary mb-3">
+                                                <i class="fas fa-chart-line me-2"></i> Statut & Suivi
+                                            </h6>
+                                            <div class="info-grid">
+                                                <div class="info-item">
+                                                    <span class="label">Statut</span>
+                                                    <span class="value">
+                                                        <span class="badge 
+                                                            {% if proposition.statut == 'validee' %}bg-success
+                                                            {% elif proposition.statut == 'en_attente' %}bg-warning
+                                                            {% elif proposition.statut == 'refusee' %}bg-danger
+                                                            {% elif proposition.statut == 'terminee' %}bg-info
+                                                            {% else %}bg-secondary{% endif %}">
+                                                            {{ proposition.get_statut_display }}
+                                                        </span>
+                                                    </span>
+                                                </div>
+                                                <div class="info-item">
+                                                    <span class="label">Statut transporteur</span>
+                                                    <span class="value">
+                                                        <span class="badge 
+                                                            {% if proposition.transporteur_statut == 'acceptee' %}bg-success
+                                                            {% elif proposition.transporteur_statut == 'refusee' %}bg-danger
+                                                            {% else %}bg-warning{% endif %}">
+                                                            {{ proposition.get_transporteur_statut_display|default:"En attente" }}
+                                                        </span>
+                                                    </span>
+                                                </div>
+                                                <div class="info-item">
+                                                    <span class="label">Donateur confirmé</span>
+                                                    <span class="value">
+                                                        {% if proposition.donator_gives %}
+                                                        <span class="text-success">
+                                                            <i class="fas fa-check-circle"></i> Oui
+                                                        </span>
+                                                        {% else %}
+                                                        <span class="text-warning">
+                                                            <i class="fas fa-clock"></i> Non
+                                                        </span>
+                                                        {% endif %}
+                                                    </span>
+                                                </div>
+                                                <div class="info-item">
+                                                    <span class="label">Date de proposition</span>
+                                                    <span class="value">{{ proposition.date_proposition|date:"d/m/Y" }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Section for Proposition -->
+                        <div class="action-section mt-5">
+                            <div class="card border-0 shadow-lg">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-tasks me-2"></i> Actions disponibles
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if proposition.transporteur_statut and proposition.transporteur_statut != 'acceptee' %}
+                                    <!-- Accept Mission -->
+                                    <div class="mission-acceptance">
+                                        <div class="alert alert-warning d-flex align-items-center mb-4">
+                                            <i class="fas fa-exclamation-triangle me-3 fa-lg"></i>
+                                            <div>
+                                                <strong>Mission à confirmer</strong>
+                                                <p class="mb-0">Vous devez accepter cette mission de collecte avant de pouvoir continuer.</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <form method="post">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="accepter">
+                                            <div class="text-center">
+                                                <button type="submit" class="btn btn-primary btn-lg px-5">
+                                                    <i class="fas fa-check-circle me-2"></i> Accepter la mission
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    {% elif proposition.donator_gives and proposition.statut != 'terminee' %}
+                                    <!-- Mark as Completed -->
+                                    <div class="mission-completion">
+                                        <div class="alert alert-success d-flex align-items-center mb-4">
+                                            <i class="fas fa-check-circle me-3 fa-lg"></i>
+                                            <div>
+                                                <strong>Prêt à terminer</strong>
+                                                <p class="mb-0">Le donateur a confirmé la remise. Vous pouvez maintenant marquer cette mission comme terminée.</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <form method="post">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="marquer comme terminer">
+                                            <div class="text-center">
+                                                <button type="submit" class="btn btn-success btn-lg px-5">
+                                                    <i class="fas fa-flag-checkered me-2"></i> Marquer comme terminée
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    {% elif proposition.transporteur_statut == 'acceptee' and not proposition.donator_gives %}
+                                    <!-- Waiting for Donor -->
+                                    <div class="waiting-donor">
+                                        <div class="alert alert-info d-flex align-items-center mb-4">
+                                            <i class="fas fa-clock me-3 fa-lg"></i>
+                                            <div>
+                                                <strong>En attente du donateur</strong>
+                                                <p class="mb-0">Vous avez accepté la mission. En attente que le donateur confirme la remise du don.</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="text-center">
+                                            <button class="btn btn-secondary btn-lg px-5" disabled>
+                                                <i class="fas fa-hourglass-half me-2"></i> En attente de confirmation
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% elif proposition.statut == 'terminee' %}
+                                    <!-- Already Completed -->
+                                    <div class="already-completed">
+                                        <div class="alert alert-success text-center py-4">
+                                            <i class="fas fa-flag-checkered fa-3x mb-3"></i>
+                                            <h4 class="fw-bold">Mission terminée</h4>
+                                            <p class="mb-0">Cette mission a déjà été marquée comme terminée.</p>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Quick Actions & Info -->
+        <div class="col-lg-4">
+            <!-- Quick Actions Card -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i> Actions rapides
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="action-grid">
+                        <!-- Back to Notifications -->
+                        <a href="{% url 'transporteur_notifications' %}" class="action-card mb-3">
+                            <div class="action-icon bg-primary">
+                                <i class="fas fa-arrow-left"></i>
+                            </div>
+                            <div class="action-content">
+                                <h6 class="fw-bold mb-1">Retour aux notifications</h6>
+                                <p class="small mb-0">Revenir à la liste des notifications</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </a>
+
+                        <!-- Dashboard -->
+                        <a href="{% url 'transporteur_dashboard' %}" class="action-card mb-3">
+                            <div class="action-icon bg-success">
+                                <i class="fas fa-tachometer-alt"></i>
+                            </div>
+                            <div class="action-content">
+                                <h6 class="fw-bold mb-1">Tableau de bord</h6>
+                                <p class="small mb-0">Voir toutes vos missions</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </a>
+
+                        <!-- Mark as Read -->
+                        {% if not notif.lu %}
+                        <button class="action-card mb-3" onclick="markNotificationAsRead()">
+                            <div class="action-icon bg-warning">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <div class="action-content">
+                                <h6 class="fw-bold mb-1">Marquer comme lu</h6>
+                                <p class="small mb-0">Supprimer le statut "non lu"</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </button>
+                        {% endif %}
+
+                        <!-- Contact -->
+                        {% if demande and demande.participant_requerant %}
+                        <a href="{% url 'chat_room' user.id demande.participant_requerant.id %}" class="action-card">
+                            <div class="action-icon bg-info">
+                                <i class="fas fa-comment"></i>
+                            </div>
+                            <div class="action-content">
+                                <h6 class="fw-bold mb-1">Contacter le bénéficiaire</h6>
+                                <p class="small mb-0">Échanger avec {{ demande.participant_requerant.username }}</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </a>
+                        {% elif proposition and proposition.participant_donateur %}
+                        <a href="{% url 'chat_room' user.id proposition.participant_donateur.id %}" class="action-card">
+                            <div class="action-icon bg-info">
+                                <i class="fas fa-comment"></i>
+                            </div>
+                            <div class="action-content">
+                                <h6 class="fw-bold mb-1">Contacter le donateur</h6>
+                                <p class="small mb-0">Échanger avec {{ proposition.participant_donateur.username }}</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification Status Card -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i> Statut de la notification
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="status-timeline">
+                        <div class="status-item active">
+                            <div class="status-icon">
+                                <i class="fas fa-paper-plane"></i>
+                            </div>
+                            <div class="status-content">
+                                <h6 class="fw-bold mb-1">Envoyée</h6>
+                                <p class="small mb-0 text-muted">{{ notif.date_creation|date:"d/m/Y H:i" }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="status-item {% if notif.lu %}active{% endif %}">
+                            <div class="status-icon">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <div class="status-content">
+                                <h6 class="fw-bold mb-1">Visualisée</h6>
+                                <p class="small mb-0 text-muted">
+                                    {% if notif.lu %}
+                                    {{ notif.lu|date:"d/m/Y H:i"|default:"Récemment" }}
+                                    {% else %}
+                                    Non visualisée
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="status-item {% if demande.transporteur_confirme or proposition.transporteur_statut == 'acceptee' %}active{% endif %}">
+                            <div class="status-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="status-content">
+                                <h6 class="fw-bold mb-1">Traitée</h6>
+                                <p class="small mb-0 text-muted">
+                                    {% if demande.transporteur_confirme or proposition.transporteur_statut == 'acceptee' %}
+                                    Mission acceptée
+                                    {% else %}
+                                    En attente
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="status-item {% if demande.statut == 'terminee' or proposition.statut == 'terminee' %}active{% endif %}">
+                            <div class="status-icon">
+                                <i class="fas fa-flag-checkered"></i>
+                            </div>
+                            <div class="status-content">
+                                <h6 class="fw-bold mb-1">Terminée</h6>
+                                <p class="small mb-0 text-muted">
+                                    {% if demande.statut == 'terminee' or proposition.statut == 'terminee' %}
+                                    Mission terminée
+                                    {% else %}
+                                    En cours
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-top: 1rem;
+    }
+    
+    .card {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .notification-icon-large {
+        width: 70px;
+        height: 70px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+    }
+    
+    .section-header {
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e0e0e0;
+        margin-bottom: 1.5rem;
+    }
+    
+    .section-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+    }
+    
+    .info-grid {
+        display: grid;
+        gap: 1rem;
+    }
+    
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .info-item .label {
+        color: #666;
+        font-weight: 500;
+    }
+    
+    .info-item .value {
+        font-weight: 600;
+    }
+    
+    .message-content {
+        line-height: 1.6;
+        font-size: 1.05rem;
+    }
+    
+    /* Action Cards */
+    .action-card {
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: white;
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: inherit;
+    }
+    
+    .action-card:hover {
+        border-color: #007bff;
+        transform: translateX(5px);
+        text-decoration: none;
+        color: inherit;
+    }
+    
+    .accept-action:hover {
+        border-color: #28a745;
+        background-color: rgba(40, 167, 69, 0.05);
+    }
+    
+    .refuse-action:hover {
+        border-color: #dc3545;
+        background-color: rgba(220, 53, 69, 0.05);
+    }
+    
+    .action-card.selected {
+        border-width: 3px;
+    }
+    
+    .accept-action.selected {
+        border-color: #28a745;
+        background-color: rgba(40, 167, 69, 0.1);
+    }
+    
+    .refuse-action.selected {
+        border-color: #dc3545;
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+    
+    .action-radio {
+        display: none;
+    }
+    
+    .action-label {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        margin: 0;
+        width: 100%;
+    }
+    
+    .action-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        margin-right: 1.5rem;
+        flex-shrink: 0;
+    }
+    
+    .action-content h6 {
+        margin: 0;
+        font-weight: 600;
+    }
+    
+    .action-content p {
+        margin: 0.25rem 0 0 0;
+        color: #666;
+    }
+    
+    /* Quick Actions */
+    .action-grid {
+        display: grid;
+        gap: 1rem;
+    }
+    
+    .action-grid .action-card {
+        padding: 0.75rem;
+    }
+    
+    .action-grid .action-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+        margin-right: 1rem;
+    }
+    
+    .action-grid .action-content h6 {
+        font-size: 0.95rem;
+    }
+    
+    /* Status Timeline */
+    .status-timeline {
+        position: relative;
+        padding-left: 40px;
+    }
+    
+    .status-timeline::before {
+        content: '';
+        position: absolute;
+        left: 20px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background-color: #e0e0e0;
+    }
+    
+    .status-item {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    
+    .status-item.active .status-icon {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .status-item:not(.active) .status-icon {
+        background-color: #e0e0e0;
+        color: #666;
+    }
+    
+    .status-icon {
+        position: absolute;
+        left: -40px;
+        top: 0;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+    
+    .status-content h6 {
+        margin: 0;
+        font-weight: 600;
+    }
+    
+    /* Button Styles */
+    .btn-lg {
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    
+    #submitDemandeBtn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let selectedDemandeAction = null;
+        
+        // Form submission handlers
+        document.getElementById('demandeActionForm')?.addEventListener('submit', function(e) {
+            if (!selectedDemandeAction) {
+                e.preventDefault();
+                alert('Veuillez sélectionner une action avant de soumettre.');
+                return false;
+            }
+            
+            if (selectedDemandeAction === 'refuser') {
+                const reasonField = document.getElementById('demandeRaisonRefus');
+                if (reasonField && !reasonField.value.trim()) {
+                    // Reason is optional, but we can show a warning
+                    if (!confirm('Vous allez refuser sans donner de raison. Continuer ?')) {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+            }
+            
+            // Show loading state
+            const submitBtn = document.getElementById('submitDemandeBtn');
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Traitement en cours...';
+                submitBtn.disabled = true;
+            }
+        });
+        
+        function selectDemandeAction(action) {
+            selectedDemandeAction = action;
+            
+            // Reset all cards
+            document.querySelectorAll('.action-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Select the clicked card
+            const selectedCard = document.querySelector(`.action-card[onclick="selectDemandeAction('${action}')"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+                
+                // Update radio button
+                document.getElementById(`action${action.charAt(0).toUpperCase() + action.slice(1)}Demande`).checked = true;
+                
+                // Show/hide reason field
+                const reasonSection = document.getElementById('demandeRefusalReason');
+                if (action === 'refuser') {
+                    reasonSection.style.display = 'block';
+                } else {
+                    reasonSection.style.display = 'none';
+                }
+                
+                // Enable submit button
+                const submitBtn = document.getElementById('submitDemandeBtn');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                }
+            }
+        }
+        
+        function markNotificationAsRead() {
+            // In a real app, you would make an AJAX call here
+            // For now, just show a message
+            alert('Notification marquée comme lue.\n\nDans une application réelle, cela mettrait à jour le statut via AJAX.');
+        }
+        
+        // Make functions available globally
+        window.selectDemandeAction = selectDemandeAction;
+        window.markNotificationAsRead = markNotificationAsRead;
+    });
+</script>
 {% endblock %}

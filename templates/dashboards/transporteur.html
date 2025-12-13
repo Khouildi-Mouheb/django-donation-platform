@@ -1,135 +1,322 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <!-- BOOTSTRAP CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <title>Mes missions acceptées</title>
-</head>
-<body>
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Mes Missions | DonationHub{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h2 class="mb-4">🚚 Mes missions acceptées</h2>
+    <!-- Header -->
+    <div class="dashboard-header mb-5">
+        <h1 class="display-5 fw-bold">🚚 Mes missions acceptées</h1>
+        <p class="lead text-muted">Gérez vos collectes et livraisons</p>
+    </div>
 
-    <!-- Display Propositions (Collections) -->
-    <h4 class="mb-3 text-primary">📦 Collectes à effectuer</h4>
-    {% if propositions %}
-        {% for proposition in propositions %}
-        <div class="card mb-3 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <h5 class="card-title mb-3">
-                        Proposition #{{ proposition.id }} - {{ proposition.type_materiel }}
-                    </h5>
-                    <span class="badge bg-primary">Collecte</span>
-                </div>
-
-                <p><strong>Quantité :</strong> {{ proposition.quantite }}</p>
-                <p><strong>État :</strong> {{ proposition.get_etat_display }}</p>
-                <p><strong>Description :</strong> {{ proposition.description }}</p>
-                <p>
-                    <strong>Adresse de ramassage :</strong><br>
-                    {{ proposition.adresse_ramassage }},<br>
-                    {{ proposition.ville }} {{ proposition.code_postal }}
-                </p>
-                <p><strong>Disponibilité :</strong> {{ proposition.disponibilite_ramassage }}</p>
-                <p><strong>Statut :</strong> 
-                    <span class="badge {% if proposition.statut == 'terminee' %}bg-success{% elif proposition.statut == 'validee' %}bg-info{% else %}bg-warning{% endif %}">
-                        {{ proposition.get_statut_display }}
-                    </span>
-                </p>
-                <p><strong>Statut Transporteur :</strong> {{ proposition.get_transporteur_statut_display }}</p>
-
-                {% if proposition.statut == 'validee' and proposition.transporteur_statut == 'acceptee' %}
-                    <form method="post" action="{% url 'terminer_proposition' proposition.id %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-success">
-                            ✅ Marquer comme terminée
-                        </button>
-                    </form>
-                {% elif proposition.statut == 'terminee' %}
-                    <p class="text-success fw-bold">✅ Mission terminée</p>
-                {% elif proposition.statut == 'validee' and proposition.transporteur_statut == 'en_attente' %}
-                    <p class="text-warning">⏳ En attente de votre réponse</p>
-                {% endif %}
+    <!-- Collectes (Propositions) Section -->
+    <section class="mb-5">
+        <div class="section-header d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="h3 fw-bold text-primary mb-1">
+                    <i class="fas fa-box-open me-2"></i> Collectes à effectuer
+                </h2>
+                <p class="text-muted small mb-0">Dons à récupérer chez les donateurs</p>
             </div>
+            <span class="badge bg-primary fs-6">{{ propositions.count }} collectes</span>
         </div>
-        {% endfor %}
-    {% else %}
-        <div class="alert alert-info">Aucune collecte à effectuer.</div>
-    {% endif %}
-
-    <!-- Display Demandes (Deliveries) -->
-    <h4 class="mb-3 text-success mt-5">🚚 Livraisons à effectuer</h4>
-    {% if demandes %}
-        {% for demande in demandes %}
-        <div class="card mb-3 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <h5 class="card-title mb-3">
-                        Demande #{{ demande.id }} - {{ demande.type_materiel }}
-                    </h5>
-                    <span class="badge bg-success">Livraison</span>
+        
+        {% if propositions %}
+        <div class="row">
+            {% for proposition in propositions %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm border-0 hover-card">
+                    <div class="card-header bg-primary text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Collecte #{{ proposition.id }}</h5>
+                            <span class="badge bg-light text-primary">
+                                <i class="fas fa-box"></i>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        <!-- Item Info -->
+                        <div class="item-info mb-4">
+                            <h6 class="fw-bold">{{ proposition.type_materiel }}</h6>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted small">Quantité</span>
+                                <span class="fw-bold">{{ proposition.quantite }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted small">État</span>
+                                <span class="badge bg-info">{{ proposition.get_etat_display }}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Location -->
+                        <div class="location-info bg-light p-3 rounded mb-4">
+                            <h6 class="fw-bold mb-2">
+                                <i class="fas fa-map-marker-alt text-danger me-1"></i> Adresse de ramassage
+                            </h6>
+                            <p class="mb-1 small">{{ proposition.adresse_ramassage }}</p>
+                            <p class="mb-0 small text-muted">
+                                {{ proposition.ville }} {{ proposition.code_postal }}
+                            </p>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i> {{ proposition.disponibilite_ramassage }}
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <!-- Status -->
+                        <div class="status-info mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Statut mission</span>
+                                <span class="badge {% if proposition.statut == 'terminee' %}bg-success{% elif proposition.statut == 'validee' %}bg-info{% else %}bg-warning{% endif %}">
+                                    {{ proposition.get_statut_display }}
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>Votre statut</span>
+                                <span class="badge {% if proposition.transporteur_statut == 'acceptee' %}bg-success{% elif proposition.transporteur_statut == 'refusee' %}bg-danger{% else %}bg-warning{% endif %}">
+                                    {{ proposition.get_transporteur_statut_display }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div class="actions">
+                            {% if proposition.statut == 'validee' and proposition.transporteur_statut == 'acceptee' %}
+                            <form method="post" action="{% url 'terminer_proposition' proposition.id %}" class="mb-3">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-check-circle me-1"></i> Marquer comme terminée
+                                </button>
+                            </form>
+                            {% elif proposition.statut == 'terminee' %}
+                            <div class="alert alert-success py-2 text-center">
+                                <i class="fas fa-check me-1"></i> Mission terminée
+                            </div>
+                            {% elif proposition.statut == 'validee' and proposition.transporteur_statut == 'en_attente' %}
+                            <div class="alert alert-warning py-2 text-center">
+                                <i class="fas fa-clock me-1"></i> En attente de votre réponse
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Contact Button -->
+                            {% if proposition.participant_donateur %}
+                            <a href="{% url 'chat_room' user.id proposition.participant_donateur.id %}" 
+                               class="btn btn-outline-primary w-100">
+                                <i class="fas fa-comment me-1"></i> Contacter le donateur
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
-
-                <p><strong>Catégorie :</strong> {{ demande.categorie_recherchee.nom }}</p>
-                <p><strong>Quantité désirée :</strong> {{ demande.quantite_desiree }}</p>
-                <p><strong>Description du besoin :</strong> {{ demande.description_besoin }}</p>
-                <p><strong>Urgence :</strong> {{ demande.get_urgence_display }}</p>
-                <p>
-                    <strong>Adresse de livraison :</strong><br>
-                    {{ demande.adresse_livraison }},<br>
-                    {{ demande.ville }} {{ demande.code_postal }}
-                </p>
-                <p><strong>Disponibilité :</strong> {{ demande.disponibilite_livraison|default:"Non spécifiée" }}</p>
-                <p><strong>Statut :</strong> 
-                    <span class="badge {% if demande.statut == 'terminee' %}bg-success{% elif demande.statut == 'validee' %}bg-info{% else %}bg-warning{% endif %}">
-                        {{ demande.get_statut_display }}
-                    </span>
-                </p>
-                <p><strong>Transporteur a confirmé :</strong> 
-                    {% if demande.transporteur_confirme %}
-                        <span class="text-success">✅ Oui</span>
-                    {% else %}
-                        <span class="text-warning">❌ Non</span>
-                    {% endif %}
-                </p>
-
-                {% if demande.statut == 'validee' and not demande.transporteur_confirme %}
-                    <a href="{% url 'transporteur_confirme_demande' demande.id %}" class="btn btn-primary">
-                        🔄 Confirmer/Refuser la mission
-                    </a>
-                {% elif demande.transporteur_confirme and demande.statut == 'validee' %}
-                    <form method="post" action="{% url 'marquer_demande_terminee' demande.id %}" class="d-inline">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-success" name="action" value="marquer comme terminer">
-                            ✅ Marquer comme terminée
-                        </button>
-                    </form>
-                {% elif demande.statut == 'terminee' %}
-                    <p class="text-success fw-bold">✅ Mission terminée</p>
-                {% endif %}
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-    {% else %}
-        <div class="alert alert-info">Aucune livraison à effectuer.</div>
-    {% endif %}
+        {% else %}
+        <div class="empty-state text-center py-5">
+            <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+            <h4>Aucune collecte à effectuer</h4>
+            <p class="text-muted">Aucune collecte n'a été assignée à votre profil.</p>
+            <a href="{% url 'transporteur_notifications' %}" class="btn btn-primary">
+                <i class="fas fa-bell me-1"></i> Voir mes notifications
+            </a>
+        </div>
+        {% endif %}
+    </section>
 
-    <!-- If no missions at all -->
+    <!-- Livraisons (Demandes) Section -->
+    <section>
+        <div class="section-header d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="h3 fw-bold text-success mb-1">
+                    <i class="fas fa-truck me-2"></i> Livraisons à effectuer
+                </h2>
+                <p class="text-muted small mb-0">Dons à livrer aux bénéficiaires</p>
+            </div>
+            <span class="badge bg-success fs-6">{{ demandes.count }} livraisons</span>
+        </div>
+        
+        {% if demandes %}
+        <div class="row">
+            {% for demande in demandes %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm border-0 hover-card">
+                    <div class="card-header bg-success text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Livraison #{{ demande.id }}</h5>
+                            <span class="badge bg-light text-success">
+                                <i class="fas fa-truck"></i>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        <!-- Item Info -->
+                        <div class="item-info mb-4">
+                            <h6 class="fw-bold">{{ demande.type_materiel }}</h6>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted small">Catégorie</span>
+                                <span class="fw-bold">{{ demande.categorie_recherchee.nom }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted small">Quantité désirée</span>
+                                <span class="fw-bold">{{ demande.quantite_desiree }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted small">Urgence</span>
+                                <span class="badge {% if demande.urgence == 'elevee' %}bg-danger{% elif demande.urgence == 'moyenne' %}bg-warning{% else %}bg-info{% endif %}">
+                                    {{ demande.get_urgence_display }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Location -->
+                        <div class="location-info bg-light p-3 rounded mb-4">
+                            <h6 class="fw-bold mb-2">
+                                <i class="fas fa-map-marker-alt text-success me-1"></i> Adresse de livraison
+                            </h6>
+                            <p class="mb-1 small">{{ demande.adresse_livraison }}</p>
+                            <p class="mb-0 small text-muted">
+                                {{ demande.ville }} {{ demande.code_postal }}
+                            </p>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i> {{ demande.disponibilite_livraison|default:"Disponibilité flexible" }}
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <!-- Status -->
+                        <div class="status-info mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Statut mission</span>
+                                <span class="badge {% if demande.statut == 'terminee' %}bg-success{% elif demande.statut == 'validee' %}bg-info{% else %}bg-warning{% endif %}">
+                                    {{ demande.get_statut_display }}
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>Votre confirmation</span>
+                                {% if demande.transporteur_confirme %}
+                                <span class="text-success"><i class="fas fa-check-circle"></i> Confirmée</span>
+                                {% else %}
+                                <span class="text-warning"><i class="fas fa-exclamation-circle"></i> À confirmer</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div class="actions">
+                            {% if demande.statut == 'validee' and not demande.transporteur_confirme %}
+                            <a href="{% url 'transporteur_confirme_demande' demande.id %}" class="btn btn-primary w-100 mb-3">
+                                <i class="fas fa-check-circle me-1"></i> Confirmer/Refuser la mission
+                            </a>
+                            {% elif demande.transporteur_confirme and demande.statut == 'validee' %}
+                            <form method="post" action="{% url 'marquer_demande_terminee_transporteur' demande.id %}" class="mb-3">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-flag-checkered me-1"></i> Marquer comme terminée
+                                </button>
+                            </form>
+                            {% elif demande.statut == 'terminee' %}
+                            <div class="alert alert-success py-2 text-center">
+                                <i class="fas fa-check me-1"></i> Mission terminée
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Contact Button -->
+                            {% if demande.participant_requerant %}
+                            <a href="{% url 'chat_room' user.id demande.participant_requerant.id %}" 
+                               class="btn btn-outline-success w-100">
+                                <i class="fas fa-comment me-1"></i> Contacter le bénéficiaire
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state text-center py-5">
+            <i class="fas fa-truck fa-3x text-muted mb-3"></i>
+            <h4>Aucune livraison à effectuer</h4>
+            <p class="text-muted">Aucune livraison n'a été assignée à votre profil.</p>
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- No Missions Section -->
     {% if not propositions and not demandes %}
-        <div class="alert alert-info">
-            <h5>Aucune mission acceptée.</h5>
-            <p>Vos missions apparaîtront ici une fois que vous les aurez acceptées.</p>
-            <a href="{% url 'transporteur_notifications' %}" class="btn btn-primary">Voir mes notifications</a>
+    <div class="empty-state text-center py-5 mt-5">
+        <div class="empty-state-icon mb-4">
+            <i class="fas fa-tasks fa-4x text-muted"></i>
         </div>
+        <h4 class="mb-3">Aucune mission acceptée</h4>
+        <p class="text-muted mb-4">Vos missions apparaîtront ici une fois que vous les aurez acceptées.</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'transporteur_notifications' %}" class="btn btn-primary">
+                <i class="fas fa-bell me-1"></i> Voir mes notifications
+            </a>
+            <a href="#" class="btn btn-outline-primary">
+                <i class="fas fa-history me-1"></i> Historique des missions
+            </a>
+        </div>
+    </div>
     {% endif %}
 </div>
+
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-top: 1rem;
+    }
+    
+    .section-header {
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .hover-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    
+    .empty-state {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        border: 2px dashed #dee2e6;
+        padding: 4rem 2rem;
+    }
+    
+    .item-info {
+        background: linear-gradient(to right, #f8f9fa, #ffffff);
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .location-info {
+        border-left: 4px solid;
+    }
+    
+    .card-header {
+        border-radius: 8px 8px 0 0 !important;
+    }
+    
+    .actions .btn {
+        border-radius: 8px;
+        padding: 10px 15px;
+    }
+</style>
 {% endblock %}
-
-<!-- BOOTSTRAP JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-</body>
-</html>

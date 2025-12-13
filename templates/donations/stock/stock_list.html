@@ -1,47 +1,579 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+{% extends 'base/base.html' %}
+{% load static %}
 
-    <title>Stock des dons</title>
-
-    <!-- BOOTSTRAP CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-
-<body>
+{% block title %}Stock des dons | DonationHub{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-  <h2>📦 Stock des dons</h2>
-
-  {% for don in dons %}
-    <div class="card mb-3 shadow-sm">
-      <div class="card-body">
-        <h5 class="fw-bold">{{ don.reference }} - {{ don.type_materiel }}</h5>
-        <p>categorie : {{don.categorie}}</p>
-        <p><strong>Quantité:</strong> {{ don.quantite }}</p>
-        <p><strong>État:</strong> {{ don.get_etat_display }}</p>
-        <p><strong>Statut:</strong> {{ don.get_statut_display }}</p>
-        <p><strong>Lieu stockage:</strong> {{ don.lieu_stockage }}</p>
-        <p><strong>Date entrée:</strong> {{ don.date_entree_stock }}</p>
-
-        {% if don.photos %}
-          <img src="{{ don.photos.url }}" alt="Photo du don"
-               class="img-fluid mt-2 rounded"
-               style="max-width:200px;">
-        {% endif %}
-      </div>
+    <!-- Header -->
+    <div class="dashboard-header mb-5">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="display-5 fw-bold">
+                    <i class="fas fa-warehouse me-2"></i> Stock des dons
+                </h1>
+                <p class="lead text-muted">
+                    Gestion des objets disponibles en stock
+                </p>
+            </div>
+            <div class="text-end">
+                <a href="{% url 'membre_dashboard' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i> Retour au tableau de bord
+                </a>
+            </div>
+        </div>
     </div>
-  {% empty %}
-    <div class="alert alert-info mt-3">Aucun don en stock.</div>
-  {% endfor %}
+
+    <!-- Summary Card -->
+    <div class="card shadow-sm border-0 mb-5">
+        <div class="card-body bg-light">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h5 class="fw-bold text-primary mb-2">
+                        <i class="fas fa-info-circle me-2"></i> Résumé du stock
+                    </h5>
+                    <div class="d-flex flex-wrap gap-3">
+                        <span class="badge bg-primary">
+                            <i class="fas fa-boxes me-1"></i> Total dons : {{ dons.count }}
+                        </span>
+                        <span class="badge bg-success">
+                            <i class="fas fa-check-circle me-1"></i> Disponibles : {{ available_count }}
+                        </span>
+                        <span class="badge bg-warning">
+                            <i class="fas fa-clock me-1"></i> En attente : {{ pending_count }}
+                        </span>
+                        <span class="badge bg-info">
+                            <i class="fas fa-truck me-1"></i> En transit : {{ transit_count }}
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <div class="alert alert-success d-inline-block mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Stock mis à jour
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Items -->
+    {% if dons %}
+    <div class="row">
+        <!-- Filters Sidebar -->
+        <div class="col-lg-3 mb-4">
+            <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-filter me-2"></i> Filtres
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Category Filter -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-tag me-2"></i> Catégories
+                        </h6>
+                        <div class="filter-options">
+                            {% for don in dons %}
+                                {% ifchanged don.categorie %}
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input category-filter" 
+                                           type="checkbox" 
+                                           value="{{ don.categorie.id|default:'0' }}" 
+                                           id="cat{{ don.categorie.id|default:'0' }}"
+                                           checked>
+                                    <label class="form-check-label" for="cat{{ don.categorie.id|default:'0' }}">
+                                        {{ don.categorie.nom|default:"Non catégorisé" }}
+                                        <span class="badge bg-secondary ms-2">
+                                            {{ don.categorie.don_count|default:"1" }}
+                                        </span>
+                                    </label>
+                                </div>
+                                {% endifchanged %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-check-circle me-2"></i> Statut
+                        </h6>
+                        <select class="form-select" id="statusFilter">
+                            <option value="all">Tous les statuts</option>
+                            <option value="disponible">Disponible</option>
+                            <option value="reserve">Réservé</option>
+                            <option value="en_transit">En transit</option>
+                            <option value="livre">Livré</option>
+                        </select>
+                    </div>
+
+                    <!-- Location Filter -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-map-marker-alt me-2"></i> Lieu de stockage
+                        </h6>
+                        <select class="form-select" id="locationFilter">
+                            <option value="all">Tous les lieux</option>
+                            {% for don in dons %}
+                                {% ifchanged don.lieu_stockage %}
+                                <option value="{{ don.lieu_stockage|default:'inconnu' }}">
+                                    {{ don.lieu_stockage|default:"Lieu non spécifié" }}
+                                </option>
+                                {% endifchanged %}
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Condition Filter -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-star me-2"></i> État
+                        </h6>
+                        <select class="form-select" id="conditionFilter">
+                            <option value="all">Tous les états</option>
+                            <option value="neuf">Neuf</option>
+                            <option value="tres_bon">Très bon</option>
+                            <option value="bon">Bon</option>
+                            <option value="moyen">Moyen</option>
+                            <option value="a_reparer">À réparer</option>
+                        </select>
+                    </div>
+
+                    <!-- Reset Filters -->
+                    <button class="btn btn-outline-secondary w-100" id="resetFilters">
+                        <i class="fas fa-redo me-2"></i> Réinitialiser les filtres
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Items List -->
+        <div class="col-lg-9">
+            <div class="items-grid" id="itemsContainer">
+                {% for don in dons %}
+                <div class="item-card card shadow-sm border-0 mb-4" 
+                     data-category="{{ don.categorie.id|default:'0' }}"
+                     data-status="{{ don.statut|default:'disponible'|lower }}"
+                     data-location="{{ don.lieu_stockage|default:'inconnu' }}"
+                     data-condition="{{ don.etat|default:'bon'|lower }}">
+                    
+                    <!-- Card Header -->
+                    <div class="card-header bg-white border-bottom-0 pb-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title fw-bold text-primary mb-1">
+                                    <i class="fas fa-gift me-2"></i> {{ don.type_materiel }}
+                                </h5>
+                                <small class="text-muted">Référence : {{ don.reference|default:"N/A" }}</small>
+                            </div>
+                            <div>
+                                <span class="badge 
+                                    {% if don.statut == 'disponible' %}bg-success
+                                    {% elif don.statut == 'reserve' %}bg-warning
+                                    {% elif don.statut == 'en_transit' %}bg-info
+                                    {% elif don.statut == 'livre' %}bg-secondary
+                                    {% else %}bg-primary{% endif %}">
+                                    {{ don.get_statut_display|default:"Disponible" }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Left Column - Item Info -->
+                            <div class="col-md-8">
+                                <!-- Category & Type -->
+                                <div class="mb-3">
+                                    <div class="d-flex flex-wrap gap-2 mb-2">
+                                        {% if don.categorie %}
+                                        <span class="badge bg-primary">
+                                            <i class="fas fa-tag me-1"></i> {{ don.categorie.nom }}
+                                        </span>
+                                        {% endif %}
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-box me-1"></i> {{ don.type_materiel }}
+                                        </span>
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-star me-1"></i> {{ don.get_etat_display|default:"État non spécifié" }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Details Grid -->
+                                <div class="details-grid mb-3">
+                                    <div class="detail-item">
+                                        <i class="fas fa-balance-scale text-primary me-2"></i>
+                                        <span><strong>Quantité :</strong> {{ don.quantite }}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-calendar text-primary me-2"></i>
+                                        <span><strong>Date d'entrée :</strong> {{ don.date_entree_stock|date:"d/m/Y"|default:"N/A" }}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                        <span><strong>Lieu :</strong> {{ don.lieu_stockage|default:"Non spécifié" }}</span>
+                                    </div>
+                                    {% if don.proposition %}
+                                    <div class="detail-item">
+                                        <i class="fas fa-user text-primary me-2"></i>
+                                        <span><strong>Donateur :</strong> {{ don.proposition.participant_donateur.username|default:"Anonyme" }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Right Column - Photo & Actions -->
+                            <div class="col-md-4">
+                                <!-- Photo -->
+                                {% if don.photos %}
+                                <div class="photo-container mb-3">
+                                    <img src="{{ don.photos.url }}" 
+                                         alt="{{ don.type_materiel }}" 
+                                         class="img-thumbnail w-100" 
+                                         style="height: 120px; object-fit: cover;"
+                                         onclick="viewPhoto('{{ don.photos.url }}')">
+                                </div>
+                                {% else %}
+                                <div class="photo-placeholder bg-light p-3 rounded mb-3 text-center">
+                                    <i class="fas fa-image fa-2x text-muted"></i>
+                                    <p class="small text-muted mb-0 mt-2">Pas de photo</p>
+                                </div>
+                                {% endif %}
+
+                                <!-- Actions -->
+                                <div class="actions">
+                                    <button class="btn btn-primary w-100 mb-2" 
+                                            onclick="viewItemDetails('{{ don.id }}')">
+                                        <i class="fas fa-eye me-2"></i> Voir détails
+                                    </button>
+                                    
+                                    {% if don.statut == 'disponible' %}
+                                    <button class="btn btn-success w-100 mb-2" 
+                                            onclick="reserveItem('{{ don.id }}')">
+                                        <i class="fas fa-check me-2"></i> Réserver
+                                    </button>
+                                    {% endif %}
+                                    
+                                    <button class="btn btn-outline-secondary w-100" 
+                                            onclick="editItem('{{ don.id }}')">
+                                        <i class="fas fa-edit me-2"></i> Modifier
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- No Results Message (hidden by default) -->
+            <div id="noResultsMessage" class="text-center py-5" style="display: none;">
+                <i class="fas fa-search fa-4x text-muted mb-4"></i>
+                <h4 class="mb-3">Aucun résultat trouvé</h4>
+                <p class="text-muted mb-4">Aucun don ne correspond à vos critères de filtrage.</p>
+                <button class="btn btn-primary" id="resetFiltersBtn">
+                    <i class="fas fa-redo me-2"></i> Réinitialiser les filtres
+                </button>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty State - No Items Found -->
+    <div class="empty-state text-center py-5">
+        <div class="empty-state-icon mb-4">
+            <i class="fas fa-warehouse fa-4x text-muted"></i>
+        </div>
+        <h4 class="mb-3">Aucun don en stock</h4>
+        <p class="text-muted mb-4">
+            Le stock est actuellement vide. Aucun don n'a été ajouté au stock pour le moment.
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'liste_propositions' %}" class="btn btn-outline-primary">
+                <i class="fas fa-list me-2"></i> Voir les propositions
+            </a>
+            <a href="{% url 'membre_dashboard' %}" class="btn btn-primary">
+                <i class="fas fa-th-large me-2"></i> Tableau de bord
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Photo Modal -->
+    <div class="modal fade" id="photoModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Photo du don</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modalPhoto" src="" class="img-fluid rounded" alt="Photo du don">
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-top: 1rem;
+    }
+    
+    .card {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .item-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .item-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    
+    .details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 0.5rem;
+    }
+    
+    .detail-item {
+        display: flex;
+        align-items: center;
+        font-size: 0.9rem;
+        color: #555;
+    }
+    
+    .photo-container img {
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+    
+    .photo-container img:hover {
+        transform: scale(1.05);
+    }
+    
+    .photo-placeholder {
+        height: 120px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border: 2px dashed #dee2e6;
+    }
+    
+    .empty-state {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        border: 2px dashed #dee2e6;
+        padding: 4rem 2rem;
+    }
+    
+    .filter-options {
+        max-height: 200px;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+    
+    .filter-options::-webkit-scrollbar {
+        width: 5px;
+    }
+    
+    .filter-options::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .filter-options::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+    }
+    
+    .sticky-top {
+        position: sticky;
+        z-index: 100;
+    }
+    
+    .form-check-label {
+        cursor: pointer;
+        user-select: none;
+    }
+    
+    .form-check-input:checked + .form-check-label {
+        font-weight: bold;
+        color: #007bff;
+    }
+    
+    @media (max-width: 768px) {
+        .dashboard-header {
+            padding: 1.5rem;
+        }
+        
+        .details-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize filters
+        initializeFilters();
+        
+        // Event listeners for filters
+        document.querySelectorAll('.category-filter').forEach(checkbox => {
+            checkbox.addEventListener('change', applyFilters);
+        });
+        
+        document.getElementById('statusFilter').addEventListener('change', applyFilters);
+        document.getElementById('locationFilter').addEventListener('change', applyFilters);
+        document.getElementById('conditionFilter').addEventListener('change', applyFilters);
+        
+        // Reset filters button
+        document.getElementById('resetFilters').addEventListener('click', resetFilters);
+        document.getElementById('resetFiltersBtn')?.addEventListener('click', resetFilters);
+        
+        // Initialize item counts
+        updateCategoryCounts();
+    });
+    
+    function initializeFilters() {
+        // Show all items initially
+        document.querySelectorAll('.item-card').forEach(card => {
+            card.style.display = 'block';
+        });
+    }
+    
+    function applyFilters() {
+        const selectedCategories = Array.from(document.querySelectorAll('.category-filter:checked'))
+            .map(cb => cb.value);
+        
+        const selectedStatus = document.getElementById('statusFilter').value;
+        const selectedLocation = document.getElementById('locationFilter').value;
+        const selectedCondition = document.getElementById('conditionFilter').value;
+        
+        let visibleCount = 0;
+        
+        // Apply filters to each item card
+        document.querySelectorAll('.item-card').forEach(card => {
+            const category = card.getAttribute('data-category');
+            const status = card.getAttribute('data-status');
+            const location = card.getAttribute('data-location');
+            const condition = card.getAttribute('data-condition');
+            
+            const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(category);
+            const statusMatch = selectedStatus === 'all' || status === selectedStatus;
+            const locationMatch = selectedLocation === 'all' || location === selectedLocation;
+            const conditionMatch = selectedCondition === 'all' || condition === selectedCondition;
+            
+            if (categoryMatch && statusMatch && locationMatch && conditionMatch) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Show/hide no results message
+        const noResultsMessage = document.getElementById('noResultsMessage');
+        const itemsContainer = document.getElementById('itemsContainer');
+        
+        if (visibleCount === 0 && noResultsMessage && itemsContainer) {
+            itemsContainer.style.display = 'none';
+            noResultsMessage.style.display = 'block';
+        } else if (noResultsMessage) {
+            itemsContainer.style.display = 'block';
+            noResultsMessage.style.display = 'none';
+        }
+    }
+    
+    function resetFilters() {
+        // Reset category checkboxes
+        document.querySelectorAll('.category-filter').forEach(checkbox => {
+            checkbox.checked = true;
+        });
+        
+        // Reset dropdowns
+        document.getElementById('statusFilter').value = 'all';
+        document.getElementById('locationFilter').value = 'all';
+        document.getElementById('conditionFilter').value = 'all';
+        
+        // Apply filters
+        applyFilters();
+    }
+    
+    function updateCategoryCounts() {
+        // Count items per category
+        const categoryCounts = {};
+        
+        document.querySelectorAll('.item-card').forEach(card => {
+            const category = card.getAttribute('data-category');
+            categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+        });
+        
+        // Update badge counts
+        document.querySelectorAll('.category-filter').forEach(checkbox => {
+            const categoryId = checkbox.value;
+            const count = categoryCounts[categoryId] || 0;
+            const label = checkbox.nextElementSibling;
+            const badge = label.querySelector('.badge');
+            
+            if (badge) {
+                badge.textContent = count;
+            }
+        });
+    }
+    
+    function viewPhoto(photoUrl) {
+        document.getElementById('modalPhoto').src = photoUrl;
+        const modal = new bootstrap.Modal(document.getElementById('photoModal'));
+        modal.show();
+    }
+    
+    function viewItemDetails(itemId) {
+        // Here you would typically make an AJAX request to get item details
+        // For now, we'll show a simple alert
+        alert(`Détails du don #${itemId}\n\nCette fonctionnalité serait implémentée avec une vue détaillée.`);
+        
+        // Example: window.location.href = `/stock/${itemId}/details/`;
+    }
+    
+    function reserveItem(itemId) {
+        if (confirm(`Voulez-vous réserver ce don #${itemId} ?\n\nCette action marquera le don comme réservé.`)) {
+            // Here you would make an API call to reserve the item
+            alert(`Don #${itemId} réservé avec succès !`);
+            
+            // Update UI
+            const itemCard = document.querySelector(`.item-card[data-category][data-status][data-location][data-condition]`);
+            if (itemCard) {
+                itemCard.querySelector('.badge').className = 'badge bg-warning';
+                itemCard.querySelector('.badge').textContent = 'Réservé';
+                itemCard.querySelector('.btn-success').style.display = 'none';
+            }
+        }
+    }
+    
+    function editItem(itemId) {
+        // Here you would redirect to edit page
+        alert(`Modification du don #${itemId}\n\nRedirection vers la page de modification...`);
+        // Example: window.location.href = `/stock/${itemId}/edit/`;
+    }
+    
+    // Make functions available globally
+    window.viewPhoto = viewPhoto;
+    window.viewItemDetails = viewItemDetails;
+    window.reserveItem = reserveItem;
+    window.editItem = editItem;
+</script>
 {% endblock %}
-
-<!-- BOOTSTRAP JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-</body>
-</html>

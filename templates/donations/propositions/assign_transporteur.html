@@ -2,71 +2,580 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Assigner un transporteur</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assigner un transporteur | DonationHub</title>
+    
     <!-- ✅ BOOTSTRAP INCLUDED HERE -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .container {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+        
+        .dashboard-header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .card {
+            border-radius: 12px;
+            overflow: hidden;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom: none;
+            padding: 1.2rem 1.5rem;
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-outline-primary {
+            border: 2px solid #667eea;
+            color: #667eea;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .proposition-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .badge {
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            border-radius: 20px;
+        }
+        
+        .proposition-image {
+            max-width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-top: 1rem;
+            border: 3px solid #f0f0f0;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .info-item {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .info-item strong {
+            color: #495057;
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+        
+        .info-item span {
+            color: #212529;
+        }
+        
+        .transporteur-card {
+            border: 2px solid transparent;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .transporteur-card:hover {
+            border-color: #667eea;
+            background-color: rgba(102, 126, 234, 0.05);
+        }
+        
+        .transporteur-card.selected {
+            border-color: #667eea;
+            background-color: rgba(102, 126, 234, 0.1);
+        }
+        
+        .transporteur-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .transporteur-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .transporteur-details {
+            flex-grow: 1;
+        }
+        
+        .transporteur-rating {
+            color: #ffc107;
+            font-size: 0.9rem;
+        }
+        
+        .transporteur-stats {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+        
+        .stat-item {
+            background-color: #f1f3f5;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            color: #495057;
+        }
+        
+        .form-select {
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            border: 2px dashed #dee2e6;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            color: #adb5bd;
+            margin-bottom: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-header {
+                padding: 1.5rem;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .transporteur-info {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .transporteur-stats {
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 
 <body class="bg-light">
 
 <div class="container mt-4">
 
-  <h2 class="mb-4">🚚 Assigner un transporteur</h2>
-
-  <!-- Proposition details -->
-  <div class="card mb-4 shadow-sm">
-    <div class="card-body">
-      <h5 class="fw-bold mb-3">
-        Proposition #{{ proposition.id }} – {{ proposition.type_materiel }}
-      </h5>
-
-      <p><strong>Donateur :</strong> {{ proposition.participant_donateur }}</p>
-      <p><strong>Quantité :</strong> {{ proposition.quantite }}</p>
-      <p><strong>État :</strong> {{ proposition.get_etat_display }}</p>
-      <p><strong>Description :</strong> {{ proposition.description }}</p>
-
-      <p>
-        <strong>Adresse ramassage :</strong>
-        {{ proposition.adresse_ramassage }}, {{ proposition.ville }} {{ proposition.code_postal }}
-      </p>
-
-      <p><strong>Disponibilité :</strong> {{ proposition.disponibilite_ramassage }}</p>
-
-      {% if proposition.photos %}
-        <img src="{{ proposition.photos.url }}" class="img-fluid rounded mt-3" style="max-width:250px;" alt="Photo du don">
-      {% endif %}
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="display-5 fw-bold">
+                    <i class="fas fa-truck me-2"></i> Assigner un transporteur
+                </h1>
+                <p class="lead mb-0 opacity-90">
+                    Sélectionnez un transporteur pour la proposition #{{ proposition.id }}
+                </p>
+            </div>
+            
+        </div>
     </div>
-  </div>
 
-  <!-- Select transporteur -->
-  <div class="card shadow-sm">
-    <div class="card-body">
-      <form method="post">
-        {% csrf_token %}
+    <!-- Proposition details -->
+    <div class="card shadow-lg">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-gift me-2"></i> Détails de la proposition
+            </h5>
+        </div>
+        <div class="card-body">
+            <!-- Badges -->
+            <div class="proposition-badges">
+                <span class="badge bg-primary">
+                    <i class="fas fa-tag me-1"></i> {{ proposition.type_materiel }}
+                </span>
+                <span class="badge bg-info">
+                    <i class="fas fa-box me-1"></i> Quantité : {{ proposition.quantite }}
+                </span>
+                <span class="badge bg-warning">
+                    <i class="fas fa-star me-1"></i> {{ proposition.get_etat_display }}
+                </span>
+                <span class="badge bg-secondary">
+                    <i class="fas fa-user me-1"></i> Donateur : {{ proposition.participant_donateur.username }}
+                </span>
+            </div>
 
-        <label for="transporteur_id" class="form-label fw-bold">Sélectionner un transporteur :</label>
+            <!-- Information Grid -->
+            <div class="info-grid">
+                <div class="info-item">
+                    <strong><i class="fas fa-user me-1"></i> Donateur</strong>
+                    <span>{{ proposition.participant_donateur.username }}</span>
+                </div>
+                
+                <div class="info-item">
+                    <strong><i class="fas fa-hashtag me-1"></i> Quantité</strong>
+                    <span>{{ proposition.quantite }}</span>
+                </div>
+                
+                <div class="info-item">
+                    <strong><i class="fas fa-check-circle me-1"></i> État</strong>
+                    <span>{{ proposition.get_etat_display }}</span>
+                </div>
+                
+                <div class="info-item">
+                    <strong><i class="fas fa-calendar me-1"></i> Disponibilité</strong>
+                    <span>{{ proposition.disponibilite_ramassage|date:"d/m/Y" }}</span>
+                </div>
+                
+                <div class="info-item">
+                    <strong><i class="fas fa-map-marker-alt me-1"></i> Adresse de ramassage</strong>
+                    <span>{{ proposition.adresse_ramassage }}, {{ proposition.ville }} {{ proposition.code_postal }}</span>
+                </div>
+                
+                <div class="info-item">
+                    <strong><i class="fas fa-align-left me-1"></i> Description</strong>
+                    <span>{{ proposition.description|default:"Aucune description" }}</span>
+                </div>
+            </div>
 
-        <select name="transporteur_id" id="transporteur_id" class="form-select mb-3">
-          <option value="">-- Choisir --</option>
-          {% for t in transporteurs %}
-            <option value="{{ t.id }}">
-              {{ t.username }} 
-            </option>
-          {% endfor %}
-        </select>
-
-        <button type="submit" class="btn btn-primary">
-          🚚 Assigner
-        </button>
-      </form>
+            <!-- Photo -->
+            {% if proposition.photos %}
+            <div class="text-center mt-3">
+                <h6 class="fw-bold mb-3">
+                    <i class="fas fa-images me-2"></i> Photo du don
+                </h6>
+                <img src="{{ proposition.photos.url }}" 
+                     class="proposition-image shadow-sm" 
+                     alt="Photo du don">
+            </div>
+            {% endif %}
+        </div>
     </div>
-  </div>
+
+    <!-- Select transporteur -->
+    <div class="card shadow-lg">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-truck-loading me-2"></i> Sélectionner un transporteur
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="post" id="assignForm">
+                {% csrf_token %}
+                
+                {% if transporteurs %}
+                <div class="mb-4">
+                    <h6 class="fw-bold mb-3">
+                        <i class="fas fa-users me-2"></i> Transporteurs disponibles
+                    </h6>
+                    
+                    <!-- Dropdown Selection -->
+                    <div class="mb-4">
+                        <label for="transporteur_id" class="form-label fw-bold">
+                            <i class="fas fa-list me-2"></i> Choisir un transporteur :
+                        </label>
+                        <select name="transporteur_id" id="transporteur_id" class="form-select form-select-lg">
+                            <option value="">-- Sélectionner un transporteur --</option>
+                            {% for t in transporteurs %}
+                            <option value="{{ t.id }}">
+                                {{ t.username }} 
+                                {% if t.rating %} - ⭐ {{ t.rating }}/5{% endif %}
+                                {% if t.ville %} - 📍 {{ t.ville }}{% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Transporteurs Cards View -->
+                    <div class="mt-4">
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-id-card me-2"></i> Voir les profils
+                        </h6>
+                        <div class="row">
+                            {% for t in transporteurs %}
+                            <div class="col-md-6 mb-3">
+                                <div class="transporteur-card" onclick="selectTransporteur('{{ t.id }}')" id="transporteur-{{ t.id }}">
+                                    <div class="transporteur-info">
+                                        <div class="transporteur-avatar">
+                                            {{ t.username|slice:":1"|upper }}
+                                        </div>
+                                        <div class="transporteur-details">
+                                            <h6 class="fw-bold mb-1">{{ t.username }}</h6>
+                                            {% if t.email %}
+                                            <p class="text-muted mb-1 small">
+                                                <i class="fas fa-envelope me-1"></i> {{ t.email }}
+                                            </p>
+                                            {% endif %}
+                                            
+                                            {% if t.rating %}
+                                            <div class="transporteur-rating">
+                                                {% for i in "12345" %}
+                                                    {% if forloop.counter <= t.rating %}
+                                                        <i class="fas fa-star"></i>
+                                                    {% else %}
+                                                        <i class="far fa-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                                <span class="ms-1 text-dark">{{ t.rating }}/5</span>
+                                            </div>
+                                            {% endif %}
+                                            
+                                            <div class="transporteur-stats">
+                                                {% if t.ville %}
+                                                <span class="stat-item">
+                                                    <i class="fas fa-map-marker-alt me-1"></i> {{ t.ville }}
+                                                </span>
+                                                {% endif %}
+                                                {% if t.transports_count %}
+                                                <span class="stat-item">
+                                                    <i class="fas fa-shipping-fast me-1"></i> {{ t.transports_count }} missions
+                                                </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Empty State -->
+                <div class="empty-state">
+                    <i class="fas fa-truck"></i>
+                    <h4 class="mt-3">Aucun transporteur disponible</h4>
+                    <p class="text-muted mb-4">
+                        Désolé, aucun transporteur n'est actuellement disponible pour cette mission.
+                    </p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{% url 'liste_propositions' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i> Retour aux propositions
+                        </a>
+                        <button type="button" class="btn btn-primary" onclick="alert('Fonctionnalité: Ajouter un transporteur')">
+                            <i class="fas fa-plus me-2"></i> Ajouter un transporteur
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if transporteurs %}
+                <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                    <div>
+                        <button type="button" class="btn btn-outline-secondary me-2" onclick="window.history.back()">
+                            <i class="fas fa-times me-2"></i> Annuler
+                        </button>
+                        
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg px-4">
+                        <i class="fas fa-truck me-2"></i> Assigner le transporteur
+                    </button>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
 
 </div>
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form submission validation
+        const form = document.getElementById('assignForm');
+        const select = document.getElementById('transporteur_id');
+        
+        form.addEventListener('submit', function(event) {
+            if (!select.value) {
+                event.preventDefault();
+                showAlert('Veuillez sélectionner un transporteur', 'warning');
+                select.focus();
+                return false;
+            }
+            
+            // Show loading state
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Assignation en cours...';
+            submitBtn.disabled = true;
+            
+            // You could add AJAX submission here if needed
+            return true;
+        });
+        
+        // Transporteur selection from cards
+        if (select) {
+            select.addEventListener('change', function() {
+                const transporteurId = this.value;
+                updateSelectedCard(transporteurId);
+            });
+        }
+    });
+    
+    function selectTransporteur(transporteurId) {
+        // Update dropdown
+        const select = document.getElementById('transporteur_id');
+        if (select) {
+            select.value = transporteurId;
+        }
+        
+        // Update card selection
+        updateSelectedCard(transporteurId);
+    }
+    
+    function updateSelectedCard(transporteurId) {
+        // Remove selected class from all cards
+        document.querySelectorAll('.transporteur-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        
+        // Add selected class to chosen card
+        const selectedCard = document.getElementById(`transporteur-${transporteurId}`);
+        if (selectedCard) {
+            selectedCard.classList.add('selected');
+            
+            // Scroll to selected card
+            selectedCard.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        }
+    }
+    
+    function showAlert(message, type = 'info') {
+        // Create alert element
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Add to page
+        document.body.appendChild(alertDiv);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+    
+    // Simulate transporteur stats (in a real app, this would come from the backend)
+    document.querySelectorAll('.transporteur-card').forEach(card => {
+        const transportsCount = Math.floor(Math.random() * 50) + 1;
+        const rating = (Math.random() * 2 + 3).toFixed(1);
+        
+        // Update stats if elements exist
+        const statsElement = card.querySelector('.transporteur-stats');
+        const ratingElement = card.querySelector('.transporteur-rating');
+        
+        if (statsElement && !statsElement.querySelector('.fa-shipping-fast')) {
+            const missionsSpan = document.createElement('span');
+            missionsSpan.className = 'stat-item';
+            missionsSpan.innerHTML = `<i class="fas fa-shipping-fast me-1"></i> ${transportsCount} missions`;
+            statsElement.appendChild(missionsSpan);
+        }
+        
+        if (ratingElement) {
+            const ratingValue = ratingElement.querySelector('.ms-1');
+            if (ratingValue) {
+                ratingValue.textContent = `${rating}/5`;
+                
+                // Update stars
+                const stars = ratingElement.querySelectorAll('.fa-star, .far-star');
+                const ratingNum = parseFloat(rating);
+                
+                stars.forEach((star, index) => {
+                    if (index < Math.floor(ratingNum)) {
+                        star.className = 'fas fa-star';
+                    } else if (index < ratingNum) {
+                        star.className = 'fas fa-star-half-alt';
+                    } else {
+                        star.className = 'far fa-star';
+                    }
+                });
+            }
+        }
+    });
+</script>
 
 </body>
 </html>

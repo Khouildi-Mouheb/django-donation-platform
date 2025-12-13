@@ -1,63 +1,417 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Assigner un transporteur</title>
+{% extends 'base/base.html' %}
+{% load static %}
 
-    <!-- ✅ BOOTSTRAP INCLUDED HERE -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
+{% block title %}Assigner un Transporteur | DonationHub{% endblock %}
 
-<body class="bg-light">
-
+{% block content %}
 <div class="container mt-4">
-
-  <h2 class="mb-4">🚚 Assigner un transporteur</h2>
-
-  <!-- Proposition details -->
-  <div class="card mb-4 shadow-sm">
-    <div class="card-body">
-      <h5 class="fw-bold mb-3">
-        Proposition #{{ demande.id }} – {{ demande.type_materiel }}
-      </h5>
-
-      <p><strong>categorie :</strong> {{ demande.categorie }}</p>
-      
-
-      
-
-      
+    <!-- Header -->
+    <div class="dashboard-header mb-5">
+        <h1 class="display-5 fw-bold">
+            <i class="fas fa-truck me-2"></i> Assigner un transporteur
+        </h1>
+        <p class="lead text-muted">Sélectionnez un transporteur pour cette demande</p>
     </div>
-  </div>
 
-  <!-- Select transporteur -->
-  <div class="card shadow-sm">
-    <div class="card-body">
-      <form method="post">
-        {% csrf_token %}
+    <!-- Request Details Card -->
+    <div class="card shadow-lg border-0 mb-5">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-file-alt me-2"></i> Détails de la demande
+                </h4>
+                <span class="badge bg-light text-primary fs-6">#{{ demande.id }}</span>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <div class="row">
+                <!-- Left Column -->
+                <div class="col-md-6">
+                    <div class="request-info-section mb-4">
+                        <h5 class="fw-bold text-primary mb-3">
+                            <i class="fas fa-box me-2"></i> Informations sur le don
+                        </h5>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="label">Type de matériel</span>
+                                <span class="value fw-bold">{{ demande.type_materiel }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Catégorie</span>
+                                <span class="value">{{ demande.categorie.nom }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Quantité désirée</span>
+                                <span class="value badge bg-info">{{ demande.quantite_desiree }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Urgence</span>
+                                <span class="value">
+                                    <span class="badge {% if demande.urgence == 'elevee' %}bg-danger{% elif demande.urgence == 'moyenne' %}bg-warning{% else %}bg-info{% endif %}">
+                                        {{ demande.get_urgence_display }}
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        <label for="transporteur_id" class="form-label fw-bold">Sélectionner un transporteur :</label>
+                <!-- Right Column -->
+                <div class="col-md-6">
+                    <div class="location-info-section">
+                        <h5 class="fw-bold text-primary mb-3">
+                            <i class="fas fa-map-marker-alt me-2"></i> Informations de livraison
+                        </h5>
+                        <div class="location-details bg-light p-3 rounded">
+                            <div class="mb-2">
+                                <strong>Adresse de livraison:</strong>
+                                <p class="mb-1">{{ demande.adresse_livraison }}</p>
+                            </div>
+                            <div class="mb-2">
+                                <strong>Ville:</strong>
+                                <span>{{ demande.ville }} {{ demande.code_postal }}</span>
+                            </div>
+                            <div class="mb-2">
+                                <strong>Disponibilité:</strong>
+                                <span>{{ demande.disponibilite_livraison|default:"Non spécifiée" }}</span>
+                            </div>
+                            <div>
+                                <strong>Bénéficiaire:</strong>
+                                <span>{{ demande.participant_requerant.username }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-        <select name="transporteur_id" id="transporteur_id" class="form-select mb-3">
-          <option value="">-- Choisir --</option>
-          {% for t in transporteurs %}
-            <option value="{{ t.id }}">
-              {{ t.username }} 
-            </option>
-          {% endfor %}
-        </select>
-
-        <button type="submit" class="btn btn-primary">
-          🚚 Assigner
-        </button>
-      </form>
+            <!-- Description Section -->
+            {% if demande.description_besoin %}
+            <div class="mt-4">
+                <h6 class="fw-bold text-primary">
+                    <i class="fas fa-align-left me-2"></i> Description du besoin
+                </h6>
+                <div class="description-box p-3 bg-light rounded">
+                    {{ demande.description_besoin }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
     </div>
-  </div>
 
+    <!-- Transporter Selection Card -->
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-success text-white">
+            <h4 class="card-title mb-0">
+                <i class="fas fa-user-tie me-2"></i> Sélectionner un transporteur
+            </h4>
+        </div>
+        
+        <div class="card-body">
+            <!-- Transporters Counter -->
+            <div class="alert alert-info d-flex align-items-center mb-4">
+                <i class="fas fa-info-circle me-3 fa-lg"></i>
+                <div>
+                    <strong>{{ transporteurs.count }} transporteur(s) disponible(s)</strong>
+                    <p class="mb-0 small">Sélectionnez un transporteur pour assigner cette demande</p>
+                </div>
+            </div>
+
+            <!-- Transporters List -->
+            {% if transporteurs %}
+            <form method="post" id="assignForm">
+                {% csrf_token %}
+                
+                <div class="mb-4">
+                    <label for="transporteur_id" class="form-label fw-bold fs-5">
+                        <i class="fas fa-list me-2"></i> Choisir un transporteur
+                    </label>
+                    
+                    <div class="transporters-grid">
+                        {% for t in transporteurs %}
+                        <div class="transporter-card" onclick="selectTransporter({{ t.id }})">
+                            <input type="radio" name="transporteur_id" value="{{ t.id }}" 
+                                   id="transporter{{ t.id }}" class="transporter-radio">
+                            
+                            <label for="transporter{{ t.id }}" class="transporter-label">
+                                <div class="transporter-header">
+                                    <div class="transporter-avatar bg-primary">
+                                        {{ t.username|first|upper }}
+                                    </div>
+                                    <div class="transporter-info">
+                                        <h6 class="mb-1">{{ t.username }}</h6>
+                                        <small class="text-muted">Transporteur #{{ t.id }}</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="transporter-details mt-3">
+                                    <div class="detail-item">
+                                        <i class="fas fa-phone text-primary me-2"></i>
+                                        {{ t.telephone|default:"Non spécifié" }}
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                        {{ t.ville|default:"Ville non spécifiée" }}
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-star text-warning me-2"></i>
+                                        Disponible
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Hidden selection for form submission -->
+                <div class="mb-4" id="selectedTransporterInfo" style="display: none;">
+                    <div class="alert alert-success">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-check-circle me-2"></i>
+                                <strong>Transporteur sélectionné :</strong>
+                                <span id="selectedName"></span>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                    onclick="clearSelection()">
+                                <i class="fas fa-times"></i> Changer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-between mt-4 pt-4 border-top">
+                    <a href="{% url 'membre_dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i> Retour au tableau de bord
+                    </a>
+                    
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary btn-lg" id="assignBtn" disabled>
+                            <i class="fas fa-paper-plane me-2"></i> Assigner le transporteur
+                        </button>
+                    </div>
+                </div>
+            </form>
+            {% else %}
+            <!-- No Transporters Available -->
+            <div class="empty-state text-center py-5">
+                <i class="fas fa-truck fa-4x text-muted mb-4"></i>
+                <h4 class="mb-3">Aucun transporteur disponible</h4>
+                <p class="text-muted mb-4">
+                    Aucun transporteur n'est actuellement disponible pour cette mission.
+                    Veuillez réessayer ultérieurement.
+                </p>
+                <a href="{% url 'membre_dashboard' %}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left me-2"></i> Retour au tableau de bord
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-top: 1rem;
+    }
+    
+    .card {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        padding: 1.2rem 1.5rem;
+        border-bottom: none;
+    }
+    
+    .info-grid {
+        display: grid;
+        gap: 1rem;
+    }
+    
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .info-item .label {
+        color: #666;
+        font-weight: 500;
+    }
+    
+    .info-item .value {
+        font-weight: 600;
+    }
+    
+    .location-details {
+        border-left: 4px solid #28a745;
+    }
+    
+    .description-box {
+        border-left: 4px solid #007bff;
+        font-style: italic;
+    }
+    
+    .transporters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .transporter-card {
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .transporter-card:hover {
+        border-color: #007bff;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,123,255,0.1);
+    }
+    
+    .transporter-card.selected {
+        border-color: #28a745;
+        background-color: #f8fff8;
+    }
+    
+    .transporter-radio {
+        display: none;
+    }
+    
+    .transporter-label {
+        margin: 0;
+        cursor: pointer;
+        display: block;
+    }
+    
+    .transporter-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .transporter-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin-right: 1rem;
+    }
+    
+    .transporter-info h6 {
+        margin: 0;
+        font-weight: 600;
+    }
+    
+    .transporter-details {
+        font-size: 0.9rem;
+    }
+    
+    .detail-item {
+        margin-bottom: 0.5rem;
+        color: #555;
+    }
+    
+    .empty-state {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        border: 2px dashed #dee2e6;
+        padding: 3rem;
+    }
+    
+    #assignBtn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+</style>
 
-</body>
-</html>
+<script>
+    let selectedTransporterId = null;
+    let selectedTransporterName = null;
+    
+    function selectTransporter(id) {
+        // Reset all cards
+        document.querySelectorAll('.transporter-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        
+        // Find the selected card
+        const selectedCard = document.querySelector(`.transporter-card[onclick="selectTransporter(${id})"]`);
+        if (selectedCard) {
+            selectedCard.classList.add('selected');
+            
+            // Get transporter name
+            const nameElement = selectedCard.querySelector('h6');
+            selectedTransporterName = nameElement ? nameElement.textContent : 'Transporteur';
+            selectedTransporterId = id;
+            
+            // Update form
+            document.querySelector(`#transporter${id}`).checked = true;
+            document.getElementById('selectedName').textContent = selectedTransporterName;
+            document.getElementById('selectedTransporterInfo').style.display = 'block';
+            document.getElementById('assignBtn').disabled = false;
+        }
+    }
+    
+    function clearSelection() {
+        selectedTransporterId = null;
+        selectedTransporterName = null;
+        
+        // Reset all cards
+        document.querySelectorAll('.transporter-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        
+        // Reset form
+        document.querySelectorAll('.transporter-radio').forEach(radio => {
+            radio.checked = false;
+        });
+        
+        document.getElementById('selectedTransporterInfo').style.display = 'none';
+        document.getElementById('assignBtn').disabled = true;
+    }
+    
+    // Initialize form
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if a transporter is already selected (for form re-submission)
+        const selectedRadio = document.querySelector('.transporter-radio:checked');
+        if (selectedRadio) {
+            const id = selectedRadio.value;
+            selectTransporter(parseInt(id));
+        }
+        
+        // Form submission handler
+        document.getElementById('assignForm').addEventListener('submit', function(e) {
+            if (!selectedTransporterId) {
+                e.preventDefault();
+                alert('Veuillez sélectionner un transporteur avant de soumettre.');
+                return false;
+            }
+            
+            // Optional: Add loading state
+            const assignBtn = document.getElementById('assignBtn');
+            assignBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Assignation en cours...';
+            assignBtn.disabled = true;
+        });
+    });
+</script>
+{% endblock %}

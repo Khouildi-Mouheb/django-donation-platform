@@ -1,18 +1,879 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Create Transporteur</title>
-</head>
-<body>
-    <h2>Create Transporteur Account</h2>
+{% extends 'base/base.html' %}
+{% load static %}
 
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
+{% block title %}Créer un Transporteur | DonationHub{% endblock %}
 
-        <button type="submit">Create Transporteur</button>
-    </form>
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="dashboard-header mb-5">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="display-5 fw-bold">
+                    <i class="fas fa-truck me-2"></i> Créer un compte transporteur
+                </h1>
+                <p class="lead text-muted">Ajoutez un nouveau transporteur au système</p>
+            </div>
+            <div class="text-end">
+                <a href="{% url 'home' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i> Retour à l'accueil
+                </a>
+            </div>
+        </div>
+    </div>
 
-    <p><a href="{% url 'home' %}">Back to Home</a></p>
-</body>
-</html>
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-user-plus me-2"></i> Formulaire de création de transporteur
+                    </h4>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Transporteur Role Info -->
+                    <div class="alert alert-warning d-flex align-items-center mb-4">
+                        <i class="fas fa-truck fa-2x me-3"></i>
+                        <div>
+                            <strong>Rôle de transporteur</strong>
+                            <p class="mb-0">Les transporteurs sont responsables de la collecte et de la livraison des dons entre donateurs et bénéficiaires.</p>
+                        </div>
+                    </div>
+
+                    {% if messages %}
+                    <div class="alert-container mb-4">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            <i class="fas 
+                                {% if message.tags == 'success' %}fa-check-circle
+                                {% elif message.tags == 'error' %}fa-exclamation-circle
+                                {% else %}fa-info-circle{% endif %}
+                                me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <form method="post" id="transporteurForm" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <!-- Username -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.username.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-user me-1"></i> Nom d'utilisateur *
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-at"></i>
+                                    </span>
+                                    {{ form.username }}
+                                </div>
+                                {% if form.username.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.username.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Email -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.email.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-envelope me-1"></i> Adresse email *
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                    {{ form.email }}
+                                </div>
+                                {% if form.email.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.email.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Password -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.password.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-lock me-1"></i> Mot de passe *
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-key"></i>
+                                    </span>
+                                    {{ form.password }}
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                {% if form.password.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.password.errors }}
+                                </div>
+                                {% endif %}
+                                <div class="password-strength mt-2">
+                                    <div class="progress" style="height: 5px;">
+                                        <div class="progress-bar" id="passwordStrength" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                    <small class="text-muted" id="passwordStrengthText">Force du mot de passe</small>
+                                </div>
+                            </div>
+
+                            <!-- Confirm Password -->
+                            <div class="col-md-6 mb-3">
+                                <label for="confirm_password" class="form-label fw-bold">
+                                    <i class="fas fa-lock me-1"></i> Confirmer le mot de passe *
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-key"></i>
+                                    </span>
+                                    <input type="password" class="form-control" id="confirm_password" 
+                                           name="confirm_password" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback" id="confirmPasswordError">
+                                    Les mots de passe ne correspondent pas
+                                </div>
+                                <div class="valid-feedback">
+                                    Les mots de passe correspondent
+                                </div>
+                            </div>
+
+                            <!-- Full Name -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.nom_complet.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-user-tag me-1"></i> Nom complet *
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-user-circle"></i>
+                                    </span>
+                                    {{ form.nom_complet }}
+                                </div>
+                                {% if form.nom_complet.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.nom_complet.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Phone Number -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.telephone.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-phone me-1"></i> Téléphone *
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-mobile-alt"></i>
+                                    </span>
+                                    {{ form.telephone }}
+                                </div>
+                                {% if form.telephone.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.telephone.errors }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Format: +212 6XX-XXXXXX</div>
+                            </div>
+
+                            <!-- Vehicle Type -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.type_vehicule.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-car me-1"></i> Type de véhicule *
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-truck-pickup"></i>
+                                    </span>
+                                    {{ form.type_vehicule }}
+                                </div>
+                                {% if form.type_vehicule.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.type_vehicule.errors }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Ex: Camionnette, Voiture, Camion</div>
+                            </div>
+
+                            <!-- Vehicle Registration -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.immatriculation.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-id-card me-1"></i> Immatriculation
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-barcode"></i>
+                                    </span>
+                                    {{ form.immatriculation }}
+                                </div>
+                                {% if form.immatriculation.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.immatriculation.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- City -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.ville.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-city me-1"></i> Ville *
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                    </span>
+                                    {{ form.ville }}
+                                </div>
+                                {% if form.ville.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.ville.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Zone Coverage -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.zone_couverture.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-map me-1"></i> Zone de couverture
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-map-marked-alt"></i>
+                                    </span>
+                                    {{ form.zone_couverture }}
+                                </div>
+                                {% if form.zone_couverture.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.zone_couverture.errors }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Ex: Casablanca et régions, Rabat-Salé, etc.</div>
+                            </div>
+
+                            <!-- Availability -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.disponibilite.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-calendar-check me-1"></i> Disponibilité
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-clock"></i>
+                                    </span>
+                                    {{ form.disponibilite }}
+                                </div>
+                                {% if form.disponibilite.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.disponibilite.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Hourly Rate -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.tarif_horaire.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-money-bill-wave me-1"></i> Tarif horaire (DH)
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-coins"></i>
+                                    </span>
+                                    {{ form.tarif_horaire }}
+                                </div>
+                                {% if form.tarif_horaire.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.tarif_horaire.errors }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Tarif en dirhams par heure</div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Information -->
+                        <div class="mb-4">
+                            <label for="{{ form.informations_supplementaires.id_for_label }}" class="form-label fw-bold">
+                                <i class="fas fa-info-circle me-1"></i> Informations supplémentaires
+                            </label>
+                            {{ form.informations_supplementaires }}
+                            {% if form.informations_supplementaires.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.informations_supplementaires.errors }}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">Notes sur le transporteur, restrictions, préférences, etc.</div>
+                        </div>
+
+                        <!-- Transporteur Capabilities -->
+                        <div class="capabilities-section mb-4">
+                            <h5 class="fw-bold text-primary mb-3">
+                                <i class="fas fa-tasks me-2"></i> Capacités du transporteur
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="canTransportFurniture" checked>
+                                        <label class="form-check-label" for="canTransportFurniture">
+                                            <i class="fas fa-couch text-success me-1"></i> Meubles
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="canTransportElectronics" checked>
+                                        <label class="form-check-label" for="canTransportElectronics">
+                                            <i class="fas fa-tv text-success me-1"></i> Électroménager
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="canTransportClothing" checked>
+                                        <label class="form-check-label" for="canTransportClothing">
+                                            <i class="fas fa-tshirt text-success me-1"></i> Vêtements
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="canTransportFragile" checked>
+                                        <label class="form-check-label" for="canTransportFragile">
+                                            <i class="fas fa-glass-whiskey text-warning me-1"></i> Objets fragiles
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="canTransportHeavy" checked>
+                                        <label class="form-check-label" for="canTransportHeavy">
+                                            <i class="fas fa-weight-hanging text-warning me-1"></i> Objets lourds
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="canTransportLongDistance" checked>
+                                        <label class="form-check-label" for="canTransportLongDistance">
+                                            <i class="fas fa-road text-info me-1"></i> Longue distance
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Terms & Conditions -->
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                            <label class="form-check-label" for="termsCheck">
+                                Je confirme que ce transporteur est autorisé à travailler sur notre plateforme et dispose des documents nécessaires.
+                            </label>
+                            <div class="invalid-feedback">
+                                Vous devez accepter les conditions
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between mt-4 pt-4 border-top">
+                            <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i> Annuler
+                            </a>
+                            
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-outline-warning" onclick="previewTransporteur()">
+                                    <i class="fas fa-eye me-2"></i> Aperçu
+                                </button>
+                                <button type="submit" class="btn btn-warning btn-lg" id="submitBtn">
+                                    <i class="fas fa-truck me-2"></i> Créer le transporteur
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transporteur Preview Modal -->
+    <div class="modal fade" id="transporteurPreviewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">
+                        <i class="fas fa-truck me-2"></i> Aperçu du transporteur
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="transporteur-preview">
+                        <!-- Preview content will be inserted here by JavaScript -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-edit me-2"></i> Modifier
+                    </button>
+                    <button type="button" class="btn btn-warning" onclick="submitTransporteurForm()">
+                        <i class="fas fa-check me-2"></i> Confirmer la création
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        color: #212529;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-top: 1rem;
+    }
+    
+    .card {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        padding: 1.2rem 1.5rem;
+        border-bottom: none;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        border: 1px solid #ced4da;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #ffc107;
+        box-shadow: 0 0 0 0.25rem rgba(255, 193, 7, 0.25);
+        transform: translateY(-1px);
+    }
+    
+    .input-group-text {
+        background-color: #f8f9fa;
+        border: 1px solid #ced4da;
+    }
+    
+    .capabilities-section {
+        background-color: #fff8e1;
+        padding: 1.5rem;
+        border-radius: 10px;
+        border: 1px solid #ffeaa7;
+    }
+    
+    .form-check-input:checked {
+        background-color: #ffc107;
+        border-color: #ffc107;
+    }
+    
+    .transporteur-preview {
+        padding: 1rem;
+    }
+    
+    .preview-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .preview-item .label {
+        font-weight: 500;
+        color: #666;
+    }
+    
+    .preview-item .value {
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .preview-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .preview-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        color: #212529;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin: 0 auto 1rem;
+    }
+    
+    .capability-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        margin: 0.25rem;
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
+    
+    .vehicle-icon {
+        font-size: 3rem;
+        color: #ffc107;
+        margin-right: 1rem;
+    }
+    
+    #submitBtn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    @media (max-width: 768px) {
+        .dashboard-header {
+            padding: 1.5rem;
+        }
+        
+        .btn-group {
+            flex-direction: column;
+            width: 100%;
+        }
+        
+        .btn-group .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        
+        .capabilities-section .row {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize form fields styling
+        initializeFormFields();
+        
+        // Password visibility toggle
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            togglePasswordVisibility('{{ form.password.id_for_label }}', this);
+        });
+        
+        document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
+            togglePasswordVisibility('confirm_password', this);
+        });
+        
+        // Password strength indicator
+        const passwordField = document.getElementById('{{ form.password.id_for_label }}');
+        const confirmPasswordField = document.getElementById('confirm_password');
+        const strengthBar = document.getElementById('passwordStrength');
+        const strengthText = document.getElementById('passwordStrengthText');
+        
+        if (passwordField) {
+            passwordField.addEventListener('input', function() {
+                updatePasswordStrength(this.value);
+                validatePasswordMatch();
+            });
+        }
+        
+        if (confirmPasswordField) {
+            confirmPasswordField.addEventListener('input', validatePasswordMatch);
+        }
+        
+        // Form submission
+        document.getElementById('transporteurForm').addEventListener('submit', function(e) {
+            if (!validateForm()) {
+                e.preventDefault();
+                return false;
+            }
+            
+            // Show loading state
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Création en cours...';
+            submitBtn.disabled = true;
+        });
+        
+        // Real-time form validation
+        document.querySelectorAll('#transporteurForm input, #transporteurForm select, #transporteurForm textarea').forEach(field => {
+            field.addEventListener('blur', validateField);
+        });
+    });
+    
+    function initializeFormFields() {
+        // Add Bootstrap classes to Django form fields
+        document.querySelectorAll('select, input, textarea').forEach(field => {
+            if (!field.classList.contains('form-control') && !field.classList.contains('form-select')) {
+                if (field.tagName === 'SELECT') {
+                    field.classList.add('form-select');
+                } else if (field.tagName === 'TEXTAREA') {
+                    field.classList.add('form-control');
+                    field.style.minHeight = '100px';
+                } else if (field.type !== 'checkbox') {
+                    field.classList.add('form-control');
+                }
+            }
+        });
+    }
+    
+    function updatePasswordStrength(password) {
+        const strengthBar = document.getElementById('passwordStrength');
+        const strengthText = document.getElementById('passwordStrengthText');
+        
+        if (!password) {
+            strengthBar.style.width = '0%';
+            strengthBar.className = 'progress-bar';
+            strengthText.textContent = 'Force du mot de passe';
+            strengthText.className = 'text-muted';
+            return;
+        }
+        
+        let score = 0;
+        let color = 'bg-danger';
+        let text = 'Faible';
+        
+        // Length check
+        if (password.length >= 8) score += 25;
+        if (password.length >= 12) score += 25;
+        
+        // Complexity checks
+        if (/[A-Z]/.test(password)) score += 20;
+        if (/[0-9]/.test(password)) score += 20;
+        if (/[^A-Za-z0-9]/.test(password)) score += 10;
+        
+        // Determine strength
+        if (score >= 80) {
+            color = 'bg-success';
+            text = 'Fort';
+            strengthText.className = 'text-success';
+        } else if (score >= 60) {
+            color = 'bg-warning';
+            text = 'Moyen';
+            strengthText.className = 'text-warning';
+        } else {
+            color = 'bg-danger';
+            text = 'Faible';
+            strengthText.className = 'text-danger';
+        }
+        
+        strengthBar.style.width = score + '%';
+        strengthBar.className = 'progress-bar ' + color;
+        strengthText.textContent = `Force du mot de passe: ${text}`;
+    }
+    
+    function validatePasswordMatch() {
+        const password = document.getElementById('{{ form.password.id_for_label }}').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        const errorDiv = document.getElementById('confirmPasswordError');
+        const validDiv = document.querySelector('#confirm_password ~ .valid-feedback');
+        
+        if (!confirmPassword) {
+            errorDiv.style.display = 'none';
+            if (validDiv) validDiv.style.display = 'none';
+            return false;
+        }
+        
+        if (password === confirmPassword) {
+            errorDiv.style.display = 'none';
+            if (validDiv) validDiv.style.display = 'block';
+            return true;
+        } else {
+            errorDiv.style.display = 'block';
+            if (validDiv) validDiv.style.display = 'none';
+            return false;
+        }
+    }
+    
+    function validateField() {
+        const field = this;
+        
+        if (field.hasAttribute('required') && !field.value.trim()) {
+            field.classList.add('is-invalid');
+            field.classList.remove('is-valid');
+            return false;
+        }
+        
+        // Email validation
+        if (field.type === 'email' && field.value) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(field.value)) {
+                field.classList.add('is-invalid');
+                field.classList.remove('is-valid');
+                return false;
+            }
+        }
+        
+        field.classList.remove('is-invalid');
+        field.classList.add('is-valid');
+        return true;
+    }
+    
+    function validateForm() {
+        let isValid = true;
+        
+        // Validate required fields
+        const requiredFields = document.querySelectorAll('#transporteurForm [required]');
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                isValid = false;
+                
+                // Scroll to first error
+                if (isValid === false) {
+                    field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    field.focus();
+                }
+            }
+        });
+        
+        // Validate password match
+        if (!validatePasswordMatch()) {
+            isValid = false;
+            const confirmField = document.getElementById('confirm_password');
+            confirmField.classList.add('is-invalid');
+            confirmField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            confirmField.focus();
+        }
+        
+        // Validate terms checkbox
+        const termsCheck = document.getElementById('termsCheck');
+        if (!termsCheck.checked) {
+            termsCheck.classList.add('is-invalid');
+            isValid = false;
+            termsCheck.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        return isValid;
+    }
+    
+    function previewTransporteur() {
+        if (!validateForm()) {
+            alert('Veuillez corriger les erreurs dans le formulaire avant de prévisualiser.');
+            return;
+        }
+        
+        // Collect form data
+        const formData = {
+            username: document.getElementById('{{ form.username.id_for_label }}').value,
+            email: document.getElementById('{{ form.email.id_for_label }}').value,
+            nom_complet: document.getElementById('{{ form.nom_complet.id_for_label }}').value || 'Non spécifié',
+            telephone: document.getElementById('{{ form.telephone.id_for_label }}').value || 'Non spécifié',
+            type_vehicule: document.getElementById('{{ form.type_vehicule.id_for_label }}').value || 'Non spécifié',
+            immatriculation: document.getElementById('{{ form.immatriculation.id_for_label }}')?.value || 'Non spécifiée',
+            ville: document.getElementById('{{ form.ville.id_for_label }}').value || 'Non spécifiée',
+            zone_couverture: document.getElementById('{{ form.zone_couverture.id_for_label }}')?.value || 'Non spécifiée',
+            disponibilite: document.getElementById('{{ form.disponibilite.id_for_label }}').value || 'Disponible',
+            tarif_horaire: document.getElementById('{{ form.tarif_horaire.id_for_label }}')?.value || 'À négocier',
+            informations: document.getElementById('{{ form.informations_supplementaires.id_for_label }}')?.value || 'Aucune information supplémentaire'
+        };
+        
+        // Get selected capabilities
+        const capabilities = [];
+        if (document.getElementById('canTransportFurniture').checked) capabilities.push('Meubles');
+        if (document.getElementById('canTransportElectronics').checked) capabilities.push('Électroménager');
+        if (document.getElementById('canTransportClothing').checked) capabilities.push('Vêtements');
+        if (document.getElementById('canTransportFragile').checked) capabilities.push('Objets fragiles');
+        if (document.getElementById('canTransportHeavy').checked) capabilities.push('Objets lourds');
+        if (document.getElementById('canTransportLongDistance').checked) capabilities.push('Longue distance');
+        
+        // Generate preview HTML
+        const previewHtml = `
+            <div class="preview-header">
+                <div class="preview-icon">
+                    <i class="fas fa-truck"></i>
+                </div>
+                <h4>Nouveau Transporteur</h4>
+                <p class="text-muted">Vérifiez les informations avant de créer le compte</p>
+            </div>
+            
+            <div class="preview-details">
+                <div class="preview-item">
+                    <span class="label">Nom d'utilisateur</span>
+                    <span class="value">${formData.username}</span>
+                </div>
+                <div class="preview-item">
+                    <span class="label">Email</span>
+                    <span class="value">${formData.email}</span>
+                </div>
+                <div class="preview-item">
+                    <span class="label">Nom complet</span>
+                    <span class="value">${formData.nom_complet}</span>
+                </div>
+                <div class="preview-item">
+                    <span class="label">Téléphone</span>
+                    <span class="value">${formData.telephone}</span>
+                </div>
+                <div class="preview-item">
+                    <span class="label">Véhicule</span>
+                    <span class="value">${formData.type_vehicule} ${formData.immatriculation ? '(' + formData.immatriculation + ')' : ''}</span>
+                </div>
+                <div class="preview-item">
+                    <span class="label">Localisation</span>
+                    <span class="value">${formData.ville} - ${formData.zone_couverture}</span>
+                </div>
+                <div class="preview-item">
+                    <span class="label">Disponibilité</span>
+                    <span class="value">${formData.disponibilite}</span>
+                </div>
+                <div class="preview-item">
+                    <span class="label">Tarif horaire</span>
+                    <span class="value">${formData.tarif_horaire} DH</span>
+                </div>
+                <div class="preview-item">
+                    <span class="label">Date de création</span>
+                    <span class="value">${new Date().toLocaleDateString('fr-FR')}</span>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <h6 class="fw-bold text-primary mb-3">
+                    <i class="fas fa-tasks me-2"></i> Capacités de transport
+                </h6>
+                <div class="capabilities-preview">
+                    ${capabilities.map(cap => `<span class="capability-badge">${cap}</span>`).join('')}
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <h6 class="fw-bold text-primary mb-3">
+                    <i class="fas fa-info-circle me-2"></i> Informations supplémentaires
+                </h6>
+                <p class="mb-0">${formData.informations}</p>
+            </div>
+            
+            <div class="alert alert-warning mt-4">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Ce transporteur pourra :</strong>
+                <ul class="mb-0 mt-2">
+                    <li>Recevoir des missions de collecte et livraison</li>
+                    <li>Accepter ou refuser des missions assignées</li>
+                    <li>Suivre ses missions en temps réel</li>
+                    <li>Contacter les donateurs et bénéficiaires</li>
+                    <li>Gérer sa disponibilité et tarifs</li>
+                </ul>
+            </div>
+        `;
+        
+        // Update modal content
+        document.querySelector('.transporteur-preview').innerHTML = previewHtml;
+        
+        // Show modal
+        const previewModal = new bootstrap.Modal(document.getElementById('transporteurPreviewModal'));
+        previewModal.show();
+    }
+    
+    function submitTransporteurForm() {
+        // Close modal
+        const previewModal = bootstrap.Modal.getInstance(document.getElementById('transporteurPreviewModal'));
+        previewModal.hide();
+        
+        // Submit the form
+        document.getElementById('transporteurForm').submit();
+    }
+    
+    // Make functions available globally
+    window.previewTransporteur = previewTransporteur;
+    window.submitTransporteurForm = submitTransporteurForm;
+</script>
+{% endblock %}

@@ -1,3 +1,594 @@
-{% for r in related_items %}
-    <p>{{ r.categorie }}</p>
-{% endfor %}
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Objets Similaires | DonationHub{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="dashboard-header mb-5">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="display-5 fw-bold">
+                    <i class="fas fa-search me-2"></i> Objets similaires disponibles
+                </h1>
+                <p class="lead text-muted">
+                    Dons correspondant à la demande #{{ demande.id }} - {{ demande.type_materiel }}
+                </p>
+            </div>
+            <div class="text-end">
+                <<!-- Get demande_id from URL parameters -->
+{% with demande_id=request.resolver_match.kwargs.demande_id %}
+<a href="{% url 'demande_detail' demande_id %}" class="btn btn-outline-primary">
+    <i class="fas fa-arrow-left me-2"></i> Retour à la demande
+</a>
+{% endwith %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Card -->
+    <div class="card shadow-sm border-0 mb-5">
+        <div class="card-body bg-light">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h5 class="fw-bold text-primary mb-2">
+                        <i class="fas fa-info-circle me-2"></i> Critères de recherche
+                    </h5>
+                    <div class="d-flex flex-wrap gap-3">
+                        <span class="badge bg-primary">
+                            <i class="fas fa-tag me-1"></i> Catégorie : {{ demande.categorie_recherchee.nom }}
+                        </span>
+                        <span class="badge bg-info">
+                            <i class="fas fa-box me-1"></i> Type : {{ demande.type_materiel }}
+                        </span>
+                        {% if demande.etat_souhaite %}
+                        <span class="badge bg-warning">
+                            <i class="fas fa-star me-1"></i> État : {{ demande.get_etat_souhaite_display }}
+                        </span>
+                        {% endif %}
+                        <span class="badge bg-secondary">
+                            <i class="fas fa-list me-1"></i> {{ related_items.count }} résultat(s) trouvé(s)
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <div class="alert alert-info d-inline-block mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        Ces dons correspondent à votre recherche
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Items Grid -->
+    {% if related_items %}
+    <div class="row">
+        <!-- Filters Sidebar -->
+        <div class="col-lg-3 mb-4">
+            <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-filter me-2"></i> Filtres
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Category Filter -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-tag me-2"></i> Catégories
+                        </h6>
+                        <div class="filter-options">
+                            {% for item in related_items %}
+                                {% ifchanged item.categorie %}
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input category-filter" 
+                                           type="checkbox" 
+                                           value="{{ item.categorie.id }}" 
+                                           id="cat{{ item.categorie.id }}"
+                                           checked>
+                                    <label class="form-check-label" for="cat{{ item.categorie.id }}">
+                                        {{ item.categorie.nom }}
+                                        <span class="badge bg-secondary ms-2">
+                                            {{ item.categorie.item_count }}
+                                        </span>
+                                    </label>
+                                </div>
+                                {% endifchanged %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-check-circle me-2"></i> Statut
+                        </h6>
+                        <select class="form-select" id="statusFilter">
+                            <option value="all">Tous les statuts</option>
+                            <option value="disponible">Disponible</option>
+                            <option value="reserve">Réservé</option>
+                            <option value="livre">Livré</option>
+                        </select>
+                    </div>
+
+                    <!-- Location Filter -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-map-marker-alt me-2"></i> Localisation
+                        </h6>
+                        <select class="form-select" id="locationFilter">
+                            <option value="all">Toutes les villes</option>
+                            {% for item in related_items %}
+                                {% ifchanged item.lieu_stockage %}
+                                <option value="{{ item.lieu_stockage|default:'inconnu' }}">
+                                    {{ item.lieu_stockage|default:"Lieu inconnu" }}
+                                </option>
+                                {% endifchanged %}
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Reset Filters -->
+                    <button class="btn btn-outline-secondary w-100" id="resetFilters">
+                        <i class="fas fa-redo me-2"></i> Réinitialiser les filtres
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Items List -->
+        <div class="col-lg-9">
+            <div class="items-grid" id="itemsContainer">
+                {% for item in related_items %}
+                <div class="item-card card shadow-sm border-0 mb-4" 
+                     data-category="{{ item.categorie.id }}"
+                     data-status="{{ item.statut|default:'disponible'|lower }}"
+                     data-location="{{ item.lieu_stockage|default:'inconnu' }}">
+                    
+                    <!-- Card Header -->
+                    <div class="card-header bg-white border-bottom-0 pb-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title fw-bold text-primary mb-1">
+                                    <i class="fas fa-gift me-2"></i> {{ item.type_materiel }}
+                                </h5>
+                                <small class="text-muted">Don #{{ item.reference|default:item.id }}</small>
+                            </div>
+                            <div>
+                                <span class="badge 
+                                    {% if item.statut == 'disponible' %}bg-success
+                                    {% elif item.statut == 'reserve' %}bg-warning
+                                    {% elif item.statut == 'livre' %}bg-info
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ item.statut|default:"Disponible"|title }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Left Column - Item Info -->
+                            <div class="col-md-8">
+                                <!-- Category & Type -->
+                                <div class="mb-3">
+                                    <div class="d-flex flex-wrap gap-2 mb-2">
+                                        <span class="badge bg-primary">
+                                            <i class="fas fa-tag me-1"></i> {{ item.categorie.nom }}
+                                        </span>
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-box me-1"></i> {{ item.type_materiel }}
+                                        </span>
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-star me-1"></i> {{ item.get_etat_display|default:"État non spécifié" }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Description -->
+                                <div class="mb-3">
+                                    <h6 class="fw-bold">
+                                        <i class="fas fa-align-left me-2"></i> Description
+                                    </h6>
+                                    <p class="mb-0 text-muted">
+                                        {{ item.description|truncatechars:150|default:"Aucune description disponible" }}
+                                    </p>
+                                </div>
+
+                                <!-- Details Grid -->
+                                <div class="details-grid mb-3">
+                                    <div class="detail-item">
+                                        <i class="fas fa-balance-scale text-primary me-2"></i>
+                                        <span><strong>Quantité :</strong> {{ item.quantite }}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-calendar text-primary me-2"></i>
+                                        <span><strong>Date d'ajout :</strong> {{ item.date_ajout|date:"d/m/Y" }}</span>
+                                    </div>
+                                    {% if item.donateur %}
+                                    <div class="detail-item">
+                                        <i class="fas fa-user text-primary me-2"></i>
+                                        <span><strong>Donateur :</strong> {{ item.donateur.username }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Right Column - Location & Actions -->
+                            <div class="col-md-4">
+                                <!-- Location -->
+                                <div class="location-info bg-light p-3 rounded mb-3">
+                                    <h6 class="fw-bold mb-2">
+                                        <i class="fas fa-map-marker-alt text-danger me-2"></i> Localisation
+                                    </h6>
+                                    <p class="mb-1 small">{{ item.lieu_stockage|default:"Non spécifié" }}</p>
+                                    {% if item.ville %}
+                                    <p class="mb-0 small text-muted">
+                                        <i class="fas fa-city me-1"></i> {{ item.ville }}
+                                    </p>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Match Score -->
+                                <div class="match-score text-center mb-3">
+                                    <div class="score-circle mx-auto mb-2">
+                                        <span class="score-value">
+                                            {% widthratio forloop.counter 1 95 %}
+                                        </span>
+                                        <small class="score-label">%</small>
+                                    </div>
+                                    <small class="text-muted">Correspondance avec votre demande</small>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="actions">
+                                    <button class="btn btn-primary w-100 mb-2" 
+                                            onclick="viewItemDetails('{{ item.id }}')">
+                                        <i class="fas fa-eye me-2"></i> Voir détails
+                                    </button>
+                                    
+                                    {% if item.statut == 'disponible' %}
+                                    <button class="btn btn-success w-100" 
+                                            onclick="selectItem('{{ item.id }}', '{{ demande.id }}')">
+                                        <i class="fas fa-check me-2"></i> Sélectionner ce don
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Photos (if available) -->
+                        {% if item.photos %}
+                        <div class="item-photos mt-3">
+                            <h6 class="fw-bold mb-2">
+                                <i class="fas fa-images me-2"></i> Photos
+                            </h6>
+                            <div class="photo-grid">
+                                <img src="{{ item.photos.url }}" 
+                                     alt="{{ item.type_materiel }}" 
+                                     class="img-thumbnail me-2" 
+                                     style="width: 100px; height: 100px; object-fit: cover;">
+                                <!-- Add more photos if available -->
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- No Results Message (hidden by default) -->
+            <div id="noResultsMessage" class="text-center py-5" style="display: none;">
+                <i class="fas fa-search fa-4x text-muted mb-4"></i>
+                <h4 class="mb-3">Aucun résultat trouvé</h4>
+                <p class="text-muted mb-4">Aucun don ne correspond à vos critères de filtrage.</p>
+                <button class="btn btn-primary" id="resetFiltersBtn">
+                    <i class="fas fa-redo me-2"></i> Réinitialiser les filtres
+                </button>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty State - No Items Found -->
+    <div class="empty-state text-center py-5">
+        <div class="empty-state-icon mb-4">
+            <i class="fas fa-search fa-4x text-muted"></i>
+        </div>
+        <h4 class="mb-3">Aucun objet similaire trouvé</h4>
+        <p class="text-muted mb-4">
+            Désolé, nous n'avons trouvé aucun don correspondant à votre demande pour le moment.
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'demande_detail' demande.id %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i> Retour à la demande
+            </a>
+            <a href="{% url 'membre_dashboard' %}" class="btn btn-primary">
+                <i class="fas fa-th-large me-2"></i> Tableau de bord
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Item Details Modal -->
+    <div class="modal fade" id="itemDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <!-- Content loaded dynamically via JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-top: 1rem;
+    }
+    
+    .card {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .item-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .item-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    
+    .details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 0.5rem;
+    }
+    
+    .detail-item {
+        display: flex;
+        align-items: center;
+        font-size: 0.9rem;
+        color: #555;
+    }
+    
+    .location-info {
+        border-left: 4px solid #dc3545;
+    }
+    
+    .score-circle {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #28a745, #20c997);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.2rem;
+        position: relative;
+    }
+    
+    .score-value {
+        font-size: 1.5rem;
+    }
+    
+    .score-label {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        font-size: 0.7rem;
+    }
+    
+    .photo-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .empty-state {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        border: 2px dashed #dee2e6;
+        padding: 4rem 2rem;
+    }
+    
+    .filter-options {
+        max-height: 200px;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+    
+    .filter-options::-webkit-scrollbar {
+        width: 5px;
+    }
+    
+    .filter-options::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .filter-options::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+    }
+    
+    .sticky-top {
+        position: sticky;
+        z-index: 100;
+    }
+    
+    .form-check-label {
+        cursor: pointer;
+        user-select: none;
+    }
+    
+    .form-check-input:checked + .form-check-label {
+        font-weight: bold;
+        color: #007bff;
+    }
+    
+    @media (max-width: 768px) {
+        .dashboard-header {
+            padding: 1.5rem;
+        }
+        
+        .details-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize filters
+        initializeFilters();
+        
+        // Event listeners for filters
+        document.querySelectorAll('.category-filter').forEach(checkbox => {
+            checkbox.addEventListener('change', applyFilters);
+        });
+        
+        document.getElementById('statusFilter').addEventListener('change', applyFilters);
+        document.getElementById('locationFilter').addEventListener('change', applyFilters);
+        
+        // Reset filters button
+        document.getElementById('resetFilters').addEventListener('click', resetFilters);
+        document.getElementById('resetFiltersBtn')?.addEventListener('click', resetFilters);
+        
+        // Initialize item counts
+        updateCategoryCounts();
+    });
+    
+    function initializeFilters() {
+        // Show all items initially
+        document.querySelectorAll('.item-card').forEach(card => {
+            card.style.display = 'block';
+        });
+    }
+    
+    function applyFilters() {
+        const selectedCategories = Array.from(document.querySelectorAll('.category-filter:checked'))
+            .map(cb => cb.value);
+        
+        const selectedStatus = document.getElementById('statusFilter').value;
+        const selectedLocation = document.getElementById('locationFilter').value;
+        
+        let visibleCount = 0;
+        
+        // Apply filters to each item card
+        document.querySelectorAll('.item-card').forEach(card => {
+            const category = card.getAttribute('data-category');
+            const status = card.getAttribute('data-status');
+            const location = card.getAttribute('data-location');
+            
+            const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(category);
+            const statusMatch = selectedStatus === 'all' || status === selectedStatus;
+            const locationMatch = selectedLocation === 'all' || location === selectedLocation;
+            
+            if (categoryMatch && statusMatch && locationMatch) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Show/hide no results message
+        const noResultsMessage = document.getElementById('noResultsMessage');
+        const itemsContainer = document.getElementById('itemsContainer');
+        
+        if (visibleCount === 0 && noResultsMessage && itemsContainer) {
+            itemsContainer.style.display = 'none';
+            noResultsMessage.style.display = 'block';
+        } else if (noResultsMessage) {
+            itemsContainer.style.display = 'block';
+            noResultsMessage.style.display = 'none';
+        }
+    }
+    
+    function resetFilters() {
+        // Reset category checkboxes
+        document.querySelectorAll('.category-filter').forEach(checkbox => {
+            checkbox.checked = true;
+        });
+        
+        // Reset dropdowns
+        document.getElementById('statusFilter').value = 'all';
+        document.getElementById('locationFilter').value = 'all';
+        
+        // Apply filters
+        applyFilters();
+    }
+    
+    function updateCategoryCounts() {
+        // Count items per category
+        const categoryCounts = {};
+        
+        document.querySelectorAll('.item-card').forEach(card => {
+            const category = card.getAttribute('data-category');
+            categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+        });
+        
+        // Update badge counts
+        document.querySelectorAll('.category-filter').forEach(checkbox => {
+            const categoryId = checkbox.value;
+            const count = categoryCounts[categoryId] || 0;
+            const label = checkbox.nextElementSibling;
+            const badge = label.querySelector('.badge');
+            
+            if (badge) {
+                badge.textContent = count;
+            }
+        });
+    }
+    
+    function viewItemDetails(itemId) {
+        // Here you would typically make an AJAX request to get item details
+        // For now, we'll show a simple alert
+        alert(`Détails de l'objet #${itemId}\n\nCette fonctionnalité serait implémentée avec une vue détaillée ou un modal AJAX.`);
+        
+        // Example of what could be done:
+        // fetch(`/api/items/${itemId}/details/`)
+        //     .then(response => response.json())
+        //     .then(data => {
+        //         // Populate modal with data
+        //         const modal = document.getElementById('itemDetailsModal');
+        //         // ... populate modal content
+        //         new bootstrap.Modal(modal).show();
+        //     });
+    }
+    
+    function selectItem(itemId, demandeId) {
+        if (confirm(`Voulez-vous sélectionner ce don #${itemId} pour la demande #${demandeId} ?\n\nCette action assignera ce don au bénéficiaire.`)) {
+            // Here you would make an API call to assign the item
+            alert(`Don #${itemId} sélectionné pour la demande #${demandeId}!\n\nRedirection vers la page d'assignation...`);
+            
+            // Example: Redirect to assignment page
+            // window.location.href = `/demandes/${demandeId}/assign/${itemId}/`;
+            
+            // For now, simulate a successful selection
+            const itemCard = document.querySelector(`.item-card[data-category][data-status][data-location]`);
+            if (itemCard) {
+                itemCard.querySelector('.badge').className = 'badge bg-warning';
+                itemCard.querySelector('.badge').textContent = 'Réservé';
+                itemCard.querySelector('.btn-success').disabled = true;
+                itemCard.querySelector('.btn-success').innerHTML = '<i class="fas fa-check me-2"></i> Sélectionné';
+                itemCard.querySelector('.btn-success').className = 'btn btn-secondary w-100';
+            }
+        }
+    }
+    
+    // Make functions available globally
+    window.viewItemDetails = viewItemDetails;
+    window.selectItem = selectItem;
+</script>
+{% endblock %}

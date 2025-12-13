@@ -2,37 +2,386 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <title>Créer une proposition de don</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créer une proposition de don | DonationHub</title>
+    
     <!-- BOOTSTRAP CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+        
+        .form-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .form-header {
+            background: var(--secondary-gradient);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .form-card {
+            background: white;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 2.5rem;
+            border: none;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        .form-control, .form-select {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .btn-primary {
+            background: var(--primary-gradient);
+            border: none;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-outline-primary {
+            border: 2px solid #667eea;
+            color: #667eea;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-primary:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .errorlist {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            padding-left: 0;
+            list-style: none;
+        }
+        
+        .errorlist li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.25rem;
+        }
+        
+        .errorlist li:before {
+            content: "⚠️";
+            margin-right: 5px;
+        }
+        
+        .help-text {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+        
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        /* Style the form paragraphs */
+        form p {
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Style the file input */
+        input[type="file"] {
+            padding: 0.5rem;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            width: 100%;
+        }
+        
+        input[type="file"]:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+        
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 1rem;
+            }
+            
+            .form-header {
+                padding: 1.5rem;
+            }
+            
+            .form-card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
 </head>
 
-<body class="bg-light">
+<body>
 
-<div class="container mt-5">
-    <div class="card shadow-sm p-4">
-        <h2 class="mb-4">📝 Créer une proposition de don</h2>
-
-        <form method="post" enctype="multipart/form-data">
+<div class="container form-container">
+    <!-- Header -->
+    <div class="form-header">
+        <h1 class="display-6 fw-bold mb-3">
+            <i class="fas fa-gift me-3"></i>Créer une proposition de don
+        </h1>
+        <p class="lead mb-0 opacity-90">
+            Partagez ce que vous n'utilisez plus et aidez quelqu'un dans le besoin
+        </p>
+    </div>
+    
+    <!-- Form Card -->
+    <div class="form-card">
+        <form method="post" enctype="multipart/form-data" id="donationForm">
             {% csrf_token %}
+            
+            <!-- Display form errors at the top -->
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endif %}
+            
+            <!-- Django Form -->
             {{ form.as_p }}
-
-            <button type="submit" class="btn btn-success mt-3">
-                ✔️ Soumettre
-            </button>
+            
+            <!-- Form Actions -->
+            <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
+                <div>
+                    <a href="{% url 'home' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i> Retour à l'accueil
+                    </a>
+                </div>
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary btn-lg px-4">
+                        <i class="fas fa-paper-plane me-2"></i> Soumettre la proposition
+                    </button>
+                    <p class="small text-muted mt-2 mb-0">
+                        <i class="fas fa-shield-alt me-1"></i> Vos informations sont sécurisées
+                    </p>
+                </div>
+            </div>
         </form>
-
-        <a href="{% url 'home' %}" class="btn btn-link mt-3">
-            ⬅️ Retour à l'accueil
-        </a>
     </div>
 </div>
 
 <!-- BOOTSTRAP JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('donationForm');
+        
+        // Add Bootstrap classes to all form elements
+        const inputs = form.querySelectorAll('input:not([type="checkbox"]):not([type="radio"]), select, textarea');
+        inputs.forEach(input => {
+            input.classList.add('form-control');
+            
+            // Special handling for file inputs
+            if (input.type === 'file') {
+                input.classList.remove('form-control');
+                input.classList.add('form-control-file');
+            }
+        });
+        
+        // Add Bootstrap classes to select elements
+        const selects = form.querySelectorAll('select');
+        selects.forEach(select => {
+            select.classList.add('form-select');
+        });
+        
+        // Add labels and help text styling
+        const labels = form.querySelectorAll('label');
+        labels.forEach(label => {
+            label.classList.add('form-label');
+        });
+        
+        // Wrap each form field in a container for better styling
+        const paragraphs = form.querySelectorAll('p');
+        paragraphs.forEach(p => {
+            p.classList.add('form-group');
+            
+            // Move error messages after the input
+            const errorList = p.querySelector('.errorlist');
+            const input = p.querySelector('input, select, textarea');
+            const helpText = p.querySelector('.helptext');
+            
+            if (errorList && input) {
+                input.parentNode.insertBefore(errorList, input.nextSibling);
+            }
+            
+            if (helpText) {
+                helpText.classList.add('help-text');
+            }
+        });
+        
+        // Set minimum date for disponibilite_ramassage to today
+        const dateField = form.querySelector('input[type="date"]');
+        if (dateField) {
+            const today = new Date().toISOString().split('T')[0];
+            dateField.min = today;
+            
+            // If empty, set to today
+            if (!dateField.value) {
+                dateField.value = today;
+            }
+        }
+        
+        // Form submission validation
+        form.addEventListener('submit', function(e) {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Soumission en cours...';
+            
+            // Basic validation
+            let isValid = true;
+            const requiredFields = form.querySelectorAll('[required]');
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                    field.classList.add('is-invalid');
+                    
+                    // Add error message if not present
+                    if (!field.nextElementSibling || !field.nextElementSibling.classList.contains('invalid-feedback')) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'invalid-feedback';
+                        errorDiv.textContent = 'Ce champ est obligatoire';
+                        field.parentNode.insertBefore(errorDiv, field.nextSibling);
+                    }
+                } else {
+                    field.classList.remove('is-invalid');
+                    const errorDiv = field.nextElementSibling;
+                    if (errorDiv && errorDiv.classList.contains('invalid-feedback')) {
+                        errorDiv.remove();
+                    }
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i> Soumettre la proposition';
+                
+                // Scroll to first error
+                const firstError = form.querySelector('.is-invalid');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstError.focus();
+                }
+                
+                // Show alert
+                showAlert('Veuillez remplir tous les champs obligatoires.', 'danger');
+                return false;
+            }
+            
+            return true;
+        });
+        
+        // Real-time validation
+        const formFields = form.querySelectorAll('input, select, textarea');
+        formFields.forEach(field => {
+            field.addEventListener('blur', function() {
+                if (this.hasAttribute('required') && !this.value.trim()) {
+                    this.classList.add('is-invalid');
+                } else {
+                    this.classList.remove('is-invalid');
+                    const errorDiv = this.nextElementSibling;
+                    if (errorDiv && errorDiv.classList.contains('invalid-feedback')) {
+                        errorDiv.remove();
+                    }
+                }
+            });
+            
+            field.addEventListener('input', function() {
+                if (this.value.trim()) {
+                    this.classList.remove('is-invalid');
+                    const errorDiv = this.nextElementSibling;
+                    if (errorDiv && errorDiv.classList.contains('invalid-feedback')) {
+                        errorDiv.remove();
+                    }
+                }
+            });
+        });
+        
+        // Alert function
+        function showAlert(message, type = 'info') {
+            // Remove existing alerts
+            const existingAlerts = document.querySelectorAll('.custom-alert');
+            existingAlerts.forEach(alert => alert.remove());
+            
+            // Create alert
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `custom-alert alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+    });
+</script>
 
 </body>
 </html>

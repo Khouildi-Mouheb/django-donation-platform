@@ -1,0 +1,55 @@
+<footer class="footer">
+    <div class="container">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h5>DonationHub</h5>
+                <p>Connecting donors with those in need through a transparent and efficient donation management system.</p>
+            </div>
+            
+            <div class="footer-section">
+                <h5>Quick Links</h5>
+                <ul>
+                    <li><a href="{% url 'home' %}">Home</a></li>
+                    <li><a href="{% url 'stock_list' %}">Available Donations</a></li>
+                    {% if user.is_authenticated and user.user_type == "admin" %}
+                    <li><a href="{% url 'create_admin' %}">Admin Panel</a></li>
+                    {% endif %}
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h5>User Types</h5>
+                <ul>
+                    <li>Donors (Participants)</li>
+                    <li>Recipients (Participants)</li>
+                    <li>Members (Validators)</li>
+                    <li>Transporters</li>
+                    <li>Administrators</li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h5>Contact Us</h5>
+                <p><i class="fas fa-envelope"></i> contact@donationhub.com</p>
+                <p><i class="fas fa-phone"></i> +123 456 7890</p>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin"></i></a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; {% now "Y" %} DonationHub. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a> | 
+                <a href="#">Terms of Service</a> | 
+                <a href="#">Cookie Policy</a>
+            </div>
+        </div>
+    </div>
+</footer>

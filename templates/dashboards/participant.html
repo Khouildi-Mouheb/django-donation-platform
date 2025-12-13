@@ -1,85 +1,252 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
+{% extends 'base/base.html' %}
+{% load static %}
 
-    <!-- BOOTSTRAP CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <title>Mes Propositions</title>
-</head>
-<body>
+{% block title %}Mes Propositions | DonationHub{% endblock %}
 
 {% block content %}
-
 <div class="container mt-4">
-
-  <h2 class="mb-4">📦 Mes propositions de dons</h2>
-
-  {% for proposition in propositions %}
-    <div class="card mb-3 shadow-sm">
-      <div class="card-body">
-
-        <h5 class="card-title mb-3">
-          Proposition #{{ proposition.id }} - {{ proposition.type_materiel }}
-        </h5>
-
-        <p><strong>Quantité :</strong> {{ proposition.quantite }}</p>
-        <p><strong>État :</strong> {{ proposition.get_etat_display }}</p>
-        <p><strong>Description :</strong> {{ proposition.description }}</p>
-
-        <p>
-          <strong>Adresse :</strong>
-          {{ proposition.adresse_ramassage }},
-          {{ proposition.ville }} {{ proposition.code_postal }}
-        </p>
-
-        <p><strong>Disponibilité :</strong> {{ proposition.disponibilite_ramassage }}</p>
-        <p><strong>Statut transporteur :</strong> {{ proposition.get_transporteur_statut_display }}</p>
-
-        {% if proposition.membre_validateur %}
-          <p><strong>Membre validateur :</strong> {{ proposition.membre_validateur }}</p>
-          {% if proposition.membre_validateur %}
-  <p><strong>Membre validateur:</strong> {{ proposition.membre_validateur }}</p>
-  <a href="{% url 'chat_room' user.id proposition.membre_validateur.id %}" 
-     class="btn btn-primary mt-3">
-    💬 Contacter le membre
-  </a>
-{% else %}
-  <p><strong>Membre validateur :</strong> Votre proposition n’a pas encore été traitée</p>
-{% endif %}
-
-
-        {% else %}
-          <p><strong>Membre validateur :</strong> Votre proposition n’a pas encore été traitée</p>
-        {% endif %}
-
-        <hr>
-
-        {% if not proposition.donator_gives %}
-          <form method="post" action="{% url 'confirmer_remise_donateur' proposition.id %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-success">
-              ✅ Confirmer remise effectuée
-            </button>
-          </form>
-        {% else %}
-          <p class="text-success fw-bold">Remise confirmée par vous ✅</p>
-        {% endif %}
-
-      </div>
+    <!-- Header -->
+    <div class="dashboard-header mb-5">
+        <h1 class="display-5 fw-bold">📦 Mes propositions de dons</h1>
+        <p class="lead text-muted">Suivez l'état de vos dons proposés</p>
     </div>
 
-  {% empty %}
-    <div class="alert alert-info mt-3">
-      Aucune proposition de don.
-    </div>
-  {% endfor %}
+    <!-- Propositions Grid -->
+    {% if propositions %}
+    <div class="row">
+        {% for proposition in propositions %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm border-0 hover-card">
+                <!-- Card Header -->
+                <div class="card-header bg-transparent border-bottom-0 pt-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title fw-bold text-primary mb-0">
+                            Proposition #{{ proposition.id }}
+                        </h5>
+                        <span class="badge {% if proposition.statut == 'en_attente' %}bg-warning{% elif proposition.statut == 'validee' %}bg-success{% elif proposition.statut == 'terminee' %}bg-info{% else %}bg-secondary{% endif %}">
+                            {{ proposition.get_statut_display }}
+                        </span>
+                    </div>
+                    <h6 class="fw-semibold mt-2">{{ proposition.type_materiel }}</h6>
+                </div>
 
+                <!-- Card Body -->
+                <div class="card-body">
+                    <!-- Basic Info -->
+                    <div class="proposition-info mb-3">
+                        <div class="info-item d-flex align-items-center mb-2">
+                            <i class="fas fa-balance-scale text-primary me-2" style="width: 20px;"></i>
+                            <span><strong>Quantité :</strong> {{ proposition.quantite }}</span>
+                        </div>
+                        <div class="info-item d-flex align-items-center mb-2">
+                            <i class="fas fa-star text-primary me-2" style="width: 20px;"></i>
+                            <span><strong>État :</strong> {{ proposition.get_etat_display }}</span>
+                        </div>
+                        <div class="info-item d-flex align-items-start mb-2">
+                            <i class="fas fa-align-left text-primary me-2 mt-1" style="width: 20px;"></i>
+                            <span><strong>Description :</strong> {{ proposition.description|truncatechars:50 }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Location -->
+                    <div class="location-info bg-light p-3 rounded mb-3">
+                        <div class="d-flex align-items-center mb-1">
+                            <i class="fas fa-map-marker-alt text-danger me-2"></i>
+                            <strong>Adresse de ramassage</strong>
+                        </div>
+                        <p class="mb-1 small">{{ proposition.adresse_ramassage }}</p>
+                        <p class="mb-0 small text-muted">{{ proposition.ville }} {{ proposition.code_postal }}</p>
+                    </div>
+
+                    <!-- Availability -->
+                    <div class="info-item d-flex align-items-center mb-3">
+                        <i class="fas fa-calendar text-primary me-2" style="width: 20px;"></i>
+                        <span><strong>Disponibilité :</strong> {{ proposition.disponibilite_ramassage }}</span>
+                    </div>
+
+                    <!-- Transporter Status -->
+                    {% if proposition.transporteur_statut %}
+                    <div class="info-item d-flex align-items-center mb-3">
+                        <i class="fas fa-truck text-primary me-2" style="width: 20px;"></i>
+                        <span>
+                            <strong>Statut transporteur :</strong> 
+                            <span class="badge {% if proposition.transporteur_statut == 'acceptee' %}bg-success{% elif proposition.transporteur_statut == 'refusee' %}bg-danger{% else %}bg-warning{% endif %}">
+                                {{ proposition.get_transporteur_statut_display }}
+                            </span>
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    <!-- Validator Info -->
+                    {% if proposition.membre_validateur %}
+                    <div class="validator-info bg-light p-3 rounded mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong><i class="fas fa-user-check text-success me-1"></i> Membre validateur</strong>
+                                <p class="mb-0 small">{{ proposition.membre_validateur.username }}</p>
+                            </div>
+                            <a href="{% url 'chat_room' user.id proposition.membre_validateur.id %}" 
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-comment"></i> Contacter
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning py-2 mb-3">
+                        <i class="fas fa-clock me-1"></i> En attente de validation
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Card Footer -->
+                <div class="card-footer bg-transparent border-top-0 pb-3">
+                    {% if not proposition.donator_gives %}
+                    <form method="post" action="{% url 'confirmer_remise_donateur' proposition.id %}" class="mb-2">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-check-circle me-1"></i> Confirmer remise effectuée
+                        </button>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-success py-2 text-center mb-0">
+                        <i class="fas fa-check-circle me-1"></i> Remise confirmée
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Additional Actions -->
+                    <div class="d-flex justify-content-between mt-3">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                data-bs-toggle="modal" data-bs-target="#detailsModal{{ proposition.id }}">
+                            <i class="fas fa-info-circle"></i> Plus d'infos
+                        </button>
+                        {% if proposition.transporteur_assignee %}
+                        <a href="#" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-truck me-1"></i> Transporteur assigné
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Details Modal -->
+            <div class="modal fade" id="detailsModal{{ proposition.id }}" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Détails de la proposition #{{ proposition.id }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Informations de base</h6>
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item d-flex justify-content-between">
+                                            <span>Type de matériel:</span>
+                                            <strong>{{ proposition.type_materiel }}</strong>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between">
+                                            <span>Catégorie:</span>
+                                            <strong>{{ proposition.categorie.nom }}</strong>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between">
+                                            <span>Quantité:</span>
+                                            <strong>{{ proposition.quantite }}</strong>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between">
+                                            <span>État:</span>
+                                            <strong>{{ proposition.get_etat_display }}</strong>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Localisation</h6>
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item">
+                                            <strong>Adresse:</strong><br>
+                                            {{ proposition.adresse_ramassage }}
+                                        </li>
+                                        <li class="list-group-item">
+                                            <strong>Ville:</strong> {{ proposition.ville }}
+                                        </li>
+                                        <li class="list-group-item">
+                                            <strong>Code postal:</strong> {{ proposition.code_postal }}
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <h6>Description complète</h6>
+                                <p class="p-3 bg-light rounded">{{ proposition.description }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state text-center py-5">
+        <div class="empty-state-icon mb-4">
+            <i class="fas fa-gift fa-4x text-muted"></i>
+        </div>
+        <h4 class="mb-3">Aucune proposition de don</h4>
+        <p class="text-muted mb-4">Vous n'avez pas encore proposé de dons. Partagez ce que vous n'utilisez plus !</p>
+        <a href="{% url 'create_proposition' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-plus-circle me-2"></i> Proposer un don
+        </a>
+    </div>
+    {% endif %}
 </div>
-{% endblock %}
 
-<!-- BOOTSTRAP JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-top: 1rem;
+    }
+    
+    .hover-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    
+    .info-item {
+        font-size: 0.9rem;
+    }
+    
+    .location-info {
+        background-color: #f8f9fa !important;
+        border-left: 3px solid #dc3545;
+    }
+    
+    .validator-info {
+        background-color: #e8f5e8 !important;
+        border-left: 3px solid #28a745;
+    }
+    
+    .empty-state {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        border: 2px dashed #dee2e6;
+        padding: 4rem 2rem;
+    }
+    
+    .empty-state-icon {
+        opacity: 0.6;
+    }
+    
+    .card-header {
+        background: linear-gradient(to right, #f8f9fa, #ffffff);
+    }
+</style>
+{% endblock %}

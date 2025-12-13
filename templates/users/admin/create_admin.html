@@ -1,18 +1,710 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Create Admin</title>
-</head>
-<body>
-    <h2>Create Admin Account</h2>
+{% extends 'base/base.html' %}
+{% load static %}
 
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
+{% block title %}Créer un Administrateur | DonationHub{% endblock %}
 
-        <button type="submit">Create Admin</button>
-    </form>
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="dashboard-header mb-5">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="display-5 fw-bold">
+                    <i class="fas fa-user-crown me-2"></i> Créer un compte administrateur
+                </h1>
+                <p class="lead text-muted">Ajoutez un nouvel administrateur au système</p>
+            </div>
+            <div class="text-end">
+                <a href="{% url 'home' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i> Retour à l'accueil
+                </a>
+            </div>
+        </div>
+    </div>
 
-    <p><a href="{% url 'home' %}">Back to Home</a></p>
-</body>
-</html>
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-user-plus me-2"></i> Formulaire de création d'administrateur
+                    </h4>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Admin Privileges Info -->
+                    <div class="alert alert-info d-flex align-items-center mb-4">
+                        <i class="fas fa-shield-alt fa-2x me-3"></i>
+                        <div>
+                            <strong>Privilèges administrateur</strong>
+                            <p class="mb-0">Les administrateurs ont accès à toutes les fonctionnalités du système, y compris la gestion des utilisateurs, des paramètres système et des rapports.</p>
+                        </div>
+                    </div>
+
+                    {% if messages %}
+                    <div class="alert-container mb-4">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            <i class="fas 
+                                {% if message.tags == 'success' %}fa-check-circle
+                                {% elif message.tags == 'error' %}fa-exclamation-circle
+                                {% else %}fa-info-circle{% endif %}
+                                me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <form method="post" id="adminForm" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <!-- Username -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.username.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-user me-1"></i> Nom d'utilisateur *
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-at"></i>
+                                    </span>
+                                    {{ form.username }}
+                                </div>
+                                {% if form.username.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.username.errors }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Le nom d'utilisateur doit être unique</div>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.email.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-envelope me-1"></i> Adresse email *
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                    {{ form.email }}
+                                </div>
+                                {% if form.email.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.email.errors }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">L'adresse email sera utilisée pour la communication</div>
+                            </div>
+
+                            <!-- Password -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.password.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-lock me-1"></i> Mot de passe *
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-key"></i>
+                                    </span>
+                                    {{ form.password }}
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                {% if form.password.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.password.errors }}
+                                </div>
+                                {% endif %}
+                                <div class="password-strength mt-2">
+                                    <div class="progress" style="height: 5px;">
+                                        <div class="progress-bar" id="passwordStrength" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                    <small class="text-muted" id="passwordStrengthText">Force du mot de passe</small>
+                                </div>
+                            </div>
+
+                            <!-- Confirm Password -->
+                            <div class="col-md-6 mb-3">
+                                <label for="confirm_password" class="form-label fw-bold">
+                                    <i class="fas fa-lock me-1"></i> Confirmer le mot de passe *
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-key"></i>
+                                    </span>
+                                    <input type="password" class="form-control" id="confirm_password" 
+                                           name="confirm_password" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback" id="confirmPasswordError">
+                                    Les mots de passe ne correspondent pas
+                                </div>
+                                <div class="valid-feedback">
+                                    Les mots de passe correspondent
+                                </div>
+                            </div>
+
+                            <!-- First Name -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.first_name.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-user me-1"></i> Prénom
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-user-circle"></i>
+                                    </span>
+                                    {{ form.first_name }}
+                                </div>
+                                {% if form.first_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.first_name.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Last Name -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.last_name.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-user me-1"></i> Nom de famille
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-user-circle"></i>
+                                    </span>
+                                    {{ form.last_name }}
+                                </div>
+                                {% if form.last_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.last_name.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Phone Number -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.phone_number.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-phone me-1"></i> Numéro de téléphone
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-mobile-alt"></i>
+                                    </span>
+                                    {{ form.phone_number }}
+                                </div>
+                                {% if form.phone_number.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.phone_number.errors }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Format: +212 6XX-XXXXXX</div>
+                            </div>
+
+                            <!-- Admin Level (if applicable) -->
+                            {% if form.level %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.level.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-layer-group me-1"></i> Niveau d'administration
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-sitemap"></i>
+                                    </span>
+                                    {{ form.level }}
+                                </div>
+                                {% if form.level.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.level.errors }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Définit les permissions de l'administrateur</div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Additional Notes -->
+                        <div class="mb-4">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label fw-bold">
+                                <i class="fas fa-sticky-note me-1"></i> Notes (optionnel)
+                            </label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.notes.errors }}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">Informations supplémentaires sur cet administrateur</div>
+                        </div>
+
+                        <!-- Terms & Conditions -->
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                            <label class="form-check-label" for="termsCheck">
+                                Je confirme que cette personne est autorisée à devenir administrateur du système et aura accès à toutes les fonctionnalités.
+                            </label>
+                            <div class="invalid-feedback">
+                                Vous devez accepter les conditions
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between mt-4 pt-4 border-top">
+                            <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i> Annuler
+                            </a>
+                            
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-outline-primary" onclick="previewAdmin()">
+                                    <i class="fas fa-eye me-2"></i> Aperçu
+                                </button>
+                                <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                    <i class="fas fa-user-plus me-2"></i> Créer l'administrateur
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Preview Modal -->
+    <div class="modal fade" id="adminPreviewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-check me-2"></i> Aperçu de l'administrateur
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="admin-preview">
+                        <!-- Preview content will be inserted here by JavaScript -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-edit me-2"></i> Modifier
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="submitForm()">
+                        <i class="fas fa-check me-2"></i> Confirmer la création
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-top: 1rem;
+    }
+    
+    .card {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        padding: 1.2rem 1.5rem;
+        border-bottom: none;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        border: 1px solid #ced4da;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.25rem rgba(0,123,255,0.25);
+        transform: translateY(-1px);
+    }
+    
+    .input-group-text {
+        background-color: #f8f9fa;
+        border: 1px solid #ced4da;
+    }
+    
+    .password-strength .progress {
+        border-radius: 3px;
+    }
+    
+    .progress-bar {
+        transition: width 0.3s ease;
+    }
+    
+    .form-check-input:checked {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+    
+    .admin-preview {
+        padding: 1rem;
+    }
+    
+    .preview-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .preview-item .label {
+        font-weight: 500;
+        color: #666;
+    }
+    
+    .preview-item .value {
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .preview-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .preview-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin: 0 auto 1rem;
+    }
+    
+    #submitBtn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    @media (max-width: 768px) {
+        .dashboard-header {
+            padding: 1.5rem;
+        }
+        
+        .btn-group {
+            flex-direction: column;
+            width: 100%;
+        }
+        
+        .btn-group .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize form fields styling
+        initializeFormFields();
+        
+        // Password visibility toggle
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            togglePasswordVisibility('{{ form.password.id_for_label }}', this);
+        });
+        
+        document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
+            togglePasswordVisibility('confirm_password', this);
+        });
+        
+        // Password strength indicator
+        const passwordField = document.getElementById('{{ form.password.id_for_label }}');
+        const confirmPasswordField = document.getElementById('confirm_password');
+        const strengthBar = document.getElementById('passwordStrength');
+        const strengthText = document.getElementById('passwordStrengthText');
+        
+        if (passwordField) {
+            passwordField.addEventListener('input', function() {
+                updatePasswordStrength(this.value);
+                validatePasswordMatch();
+            });
+        }
+        
+        if (confirmPasswordField) {
+            confirmPasswordField.addEventListener('input', validatePasswordMatch);
+        }
+        
+        // Form submission
+        document.getElementById('adminForm').addEventListener('submit', function(e) {
+            if (!validateForm()) {
+                e.preventDefault();
+                return false;
+            }
+            
+            // Show loading state
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Création en cours...';
+            submitBtn.disabled = true;
+        });
+        
+        // Real-time form validation
+        document.querySelectorAll('#adminForm input, #adminForm select, #adminForm textarea').forEach(field => {
+            field.addEventListener('blur', validateField);
+        });
+    });
+    
+    function initializeFormFields() {
+        // Add Bootstrap classes to Django form fields
+        document.querySelectorAll('select, input, textarea').forEach(field => {
+            if (!field.classList.contains('form-control') && !field.classList.contains('form-select')) {
+                if (field.tagName === 'SELECT') {
+                    field.classList.add('form-select');
+                } else if (field.tagName === 'TEXTAREA') {
+                    field.classList.add('form-control');
+                    field.style.minHeight = '100px';
+                } else if (field.type !== 'checkbox') {
+                    field.classList.add('form-control');
+                }
+            }
+        });
+    }
+    
+    function togglePasswordVisibility(fieldId, button) {
+        const field = document.getElementById(fieldId);
+        const icon = button.querySelector('i');
+        
+        if (field.type === 'password') {
+            field.type = 'text';
+            icon.className = 'fas fa-eye-slash';
+            button.title = 'Masquer le mot de passe';
+        } else {
+            field.type = 'password';
+            icon.className = 'fas fa-eye';
+            button.title = 'Afficher le mot de passe';
+        }
+    }
+    
+    function updatePasswordStrength(password) {
+        const strengthBar = document.getElementById('passwordStrength');
+        const strengthText = document.getElementById('passwordStrengthText');
+        
+        if (!password) {
+            strengthBar.style.width = '0%';
+            strengthBar.className = 'progress-bar';
+            strengthText.textContent = 'Force du mot de passe';
+            strengthText.className = 'text-muted';
+            return;
+        }
+        
+        let score = 0;
+        let color = 'bg-danger';
+        let text = 'Faible';
+        
+        // Length check
+        if (password.length >= 8) score += 25;
+        if (password.length >= 12) score += 25;
+        
+        // Complexity checks
+        if (/[A-Z]/.test(password)) score += 20;
+        if (/[0-9]/.test(password)) score += 20;
+        if (/[^A-Za-z0-9]/.test(password)) score += 10;
+        
+        // Determine strength
+        if (score >= 80) {
+            color = 'bg-success';
+            text = 'Fort';
+            strengthText.className = 'text-success';
+        } else if (score >= 60) {
+            color = 'bg-warning';
+            text = 'Moyen';
+            strengthText.className = 'text-warning';
+        } else {
+            color = 'bg-danger';
+            text = 'Faible';
+            strengthText.className = 'text-danger';
+        }
+        
+        strengthBar.style.width = score + '%';
+        strengthBar.className = 'progress-bar ' + color;
+        strengthText.textContent = `Force du mot de passe: ${text}`;
+    }
+    
+    function validatePasswordMatch() {
+        const password = document.getElementById('{{ form.password.id_for_label }}').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        const errorDiv = document.getElementById('confirmPasswordError');
+        const validDiv = document.querySelector('#confirm_password ~ .valid-feedback');
+        
+        if (!confirmPassword) {
+            errorDiv.style.display = 'none';
+            if (validDiv) validDiv.style.display = 'none';
+            return false;
+        }
+        
+        if (password === confirmPassword) {
+            errorDiv.style.display = 'none';
+            if (validDiv) validDiv.style.display = 'block';
+            return true;
+        } else {
+            errorDiv.style.display = 'block';
+            if (validDiv) validDiv.style.display = 'none';
+            return false;
+        }
+    }
+    
+    function validateField() {
+        const field = this;
+        
+        if (field.hasAttribute('required') && !field.value.trim()) {
+            field.classList.add('is-invalid');
+            field.classList.remove('is-valid');
+            return false;
+        }
+        
+        // Email validation
+        if (field.type === 'email' && field.value) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(field.value)) {
+                field.classList.add('is-invalid');
+                field.classList.remove('is-valid');
+                return false;
+            }
+        }
+        
+        field.classList.remove('is-invalid');
+        field.classList.add('is-valid');
+        return true;
+    }
+    
+    function validateForm() {
+        let isValid = true;
+        
+        // Validate required fields
+        const requiredFields = document.querySelectorAll('#adminForm [required]');
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                isValid = false;
+                
+                // Scroll to first error
+                if (isValid === false) {
+                    field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    field.focus();
+                }
+            }
+        });
+        
+        // Validate password match
+        if (!validatePasswordMatch()) {
+            isValid = false;
+            const confirmField = document.getElementById('confirm_password');
+            confirmField.classList.add('is-invalid');
+            confirmField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            confirmField.focus();
+        }
+        
+        // Validate terms checkbox
+        const termsCheck = document.getElementById('termsCheck');
+        if (!termsCheck.checked) {
+            termsCheck.classList.add('is-invalid');
+            isValid = false;
+            termsCheck.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        return isValid;
+    }
+    
+    function previewAdmin() {
+        if (!validateForm()) {
+            alert('Veuillez corriger les erreurs dans le formulaire avant de prévisualiser.');
+            return;
+        }
+        
+        // Collect form data
+        const formData = {
+            username: document.getElementById('{{ form.username.id_for_label }}').value,
+            email: document.getElementById('{{ form.email.id_for_label }}').value,
+            first_name: document.getElementById('{{ form.first_name.id_for_label }}').value || 'Non spécifié',
+            last_name: document.getElementById('{{ form.last_name.id_for_label }}').value || 'Non spécifié',
+            phone_number: document.getElementById('{{ form.phone_number.id_for_label }}').value || 'Non spécifié',
+            level: document.getElementById('{{ form.level.id_for_label }}')?.value || 'Administrateur standard',
+            notes: document.getElementById('{{ form.notes.id_for_label }}')?.value || 'Aucune note'
+        };
+        
+        // Generate preview HTML
+        const previewHtml = `
+            <div class="preview-header">
+                <div class="preview-icon">
+                    <i class="fas fa-user-crown"></i>
+                </div>
+                <h4>Nouvel Administrateur</h4>
+                <p class="text-muted">Vérifiez les informations avant de créer le compte</p>
+            </div>
+            
+            <div class="preview-details">
+                <div class="preview-item">
+                    <span class="label">Nom d'utilisateur</span>
+                    <span class="value">${formData.username}</span>
+                </div>
+                <div class="preview-item">
+                    <span class="label">Email</span>
+                    <span class="value">${formData.email}</span>
+                </div>
+                <div class="preview-item">
+                    <span class="label">Nom complet</span>
+                    <span class="value">${formData.first_name} ${formData.last_name}</span>
+                </div>
+                <div class="preview-item">
+                    <span class="label">Téléphone</span>
+                    <span class="value">${formData.phone_number}</span>
+                </div>
+                <div class="preview-item">
+                    <span class="label">Niveau d'administration</span>
+                    <span class="value">${formData.level}</span>
+                </div>
+                <div class="preview-item">
+                    <span class="label">Notes</span>
+                    <span class="value">${formData.notes}</span>
+                </div>
+                <div class="preview-item">
+                    <span class="label">Date de création</span>
+                    <span class="value">${new Date().toLocaleDateString('fr-FR')}</span>
+                </div>
+            </div>
+            
+            <div class="alert alert-warning mt-4">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Attention:</strong> Cet utilisateur aura des privilèges d'administration complets.
+            </div>
+        `;
+        
+        // Update modal content
+        document.querySelector('.admin-preview').innerHTML = previewHtml;
+        
+        // Show modal
+        const previewModal = new bootstrap.Modal(document.getElementById('adminPreviewModal'));
+        previewModal.show();
+    }
+    
+    function submitForm() {
+        // Close modal
+        const previewModal = bootstrap.Modal.getInstance(document.getElementById('adminPreviewModal'));
+        previewModal.hide();
+        
+        // Submit the form
+        document.getElementById('adminForm').submit();
+    }
+    
+    // Make functions available globally
+    window.previewAdmin = previewAdmin;
+    window.submitForm = submitForm;
+</script>
+{% endblock %}

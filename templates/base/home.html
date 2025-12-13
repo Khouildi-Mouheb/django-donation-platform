@@ -1,62 +1,902 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Home</title>
-</head>
-<body>
-    <h2>Welcome, {{ user.username }}!</h2>  
+{% extends 'base/base.html' %}
+{% load static %}
 
-    {% if user.is_authenticated and user.user_type == "participant" %}
-    <h3>Participant Actions</h3>
+{% block title %}Espoir des Pauvres - Système de Gestion des Dons{% endblock %}
 
-    <a href="{% url 'demandes_de_recuperateur' user.id %}">view all demandes</a>
+{% block extra_css %}
+<style>
+    /* Variables Globales */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success-gradient: linear-gradient(135deg, #42e695 0%, #3bb2b8 100%);
+        --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --dark-gradient: linear-gradient(135deg, #141E30 0%, #243B55 100%);
+    }
+    
+    /* Section Hero */
+    .hero-section {
+        background: var(--dark-gradient);
+        color: white;
+        padding: 120px 0;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 0;
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80') center/cover no-repeat;
+        opacity: 0.15;
+    }
+    
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        letter-spacing: -0.5px;
+    }
+    
+    .hero-title .brand {
+        background: linear-gradient(135deg, #42e695, #4facfe);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.4rem;
+        max-width: 700px;
+        margin: 0 auto 40px;
+        opacity: 0.9;
+        line-height: 1.6;
+        font-weight: 300;
+    }
+    
+    /* Section des Statistiques d'Impact */
+    .impact-stats {
+        background: white;
+        padding: 100px 0;
+        position: relative;
+        z-index: 1;
+        margin-top: -50px;
+        border-radius: 30px 30px 0 0;
+        box-shadow: 0 -20px 40px rgba(0,0,0,0.1);
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 40px 30px;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        border: 1px solid #f0f0f0;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+        height: 100%;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-15px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: var(--primary-gradient);
+    }
+    
+    .stat-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 20px;
+        margin: 0 auto 25px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.2rem;
+        color: white;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .stat-number {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 10px;
+        background: linear-gradient(135deg, #141E30, #243B55);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+    }
+    
+    .stat-number::after {
+        content: '+';
+        font-size: 2rem;
+        color: #42e695;
+        margin-left: 5px;
+    }
+    
+    .stat-label {
+        font-size: 1.1rem;
+        color: #666;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .stat-trend {
+        display: inline-block;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-top: 10px;
+    }
+    
+    .trend-up {
+        background: linear-gradient(135deg, rgba(66, 230, 149, 0.1), rgba(59, 178, 184, 0.1));
+        color: #42e695;
+    }
+    
+    .trend-down {
+        background: linear-gradient(135deg, rgba(240, 147, 251, 0.1), rgba(245, 87, 108, 0.1));
+        color: #f5576c;
+    }
+    
+    /* Section Impact Mondial */
+    .global-impact {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 100px 0;
+        position: relative;
+    }
+    
+    .world-map {
+        position: relative;
+        height: 400px;
+        background: url('https://images.unsplash.com/photo-1528164344705-47542687000d?ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80') center/cover no-repeat;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+    
+    .impact-marker {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        background: #f5576c;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 87, 108, 0.7); }
+        70% { transform: scale(1.2); box-shadow: 0 0 0 15px rgba(245, 87, 108, 0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 87, 108, 0); }
+    }
+    
+    /* Chronologie des Jalons */
+    .milestone-timeline {
+        position: relative;
+        padding-left: 40px;
+    }
+    
+    .milestone-timeline::before {
+        content: '';
+        position: absolute;
+        left: 20px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--primary-gradient);
+    }
+    
+    .milestone {
+        position: relative;
+        margin-bottom: 40px;
+        padding-left: 30px;
+    }
+    
+    .milestone::before {
+        content: '';
+        position: absolute;
+        left: -10px;
+        top: 5px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--primary-gradient);
+        border: 4px solid white;
+        box-shadow: 0 0 0 4px var(--primary-gradient);
+    }
+    
+    /* Cartes des Rôles */
+    .role-section {
+        padding: 100px 0;
+        background: white;
+    }
+    
+    .role-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        height: 100%;
+        border: 1px solid #f0f0f0;
+    }
+    
+    .role-card:hover {
+        transform: translateY(-15px);
+        box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+    }
+    
+    .role-header {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 40px 30px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .role-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+        background-size: 30px 30px;
+        opacity: 0.2;
+    }
+    
+    .role-icon {
+        font-size: 3rem;
+        margin-bottom: 20px;
+        color: white;
+        text-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .role-content {
+        padding: 40px 30px;
+    }
+    
+    .role-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: #141E30;
+    }
+    
+    .role-features {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 30px;
+    }
+    
+    .role-features li {
+        padding: 10px 0;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        align-items: center;
+    }
+    
+    .role-features li:before {
+        content: '✓';
+        color: #42e695;
+        font-weight: bold;
+        margin-right: 10px;
+        font-size: 1.2rem;
+    }
+    
+    /* Témoignages */
+    .testimonial-section {
+        background: var(--dark-gradient);
+        color: white;
+        padding: 100px 0;
+        position: relative;
+    }
+    
+    .testimonial-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 40px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        height: 100%;
+    }
+    
+    .testimonial-text {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        font-style: italic;
+        margin-bottom: 30px;
+    }
+    
+    .testimonial-author {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .author-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    
+    /* Section CTA */
+    .cta-section {
+        background: var(--secondary-gradient);
+        padding: 100px 0;
+        text-align: center;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .cta-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+        background-size: 40px 40px;
+        opacity: 0.1;
+    }
+    
+    .cta-title {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 20px;
+        text-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .cta-button {
+        background: white;
+        color: #141E30;
+        border: none;
+        padding: 20px 50px;
+        font-size: 1.2rem;
+        font-weight: 700;
+        border-radius: 50px;
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .cta-button:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    
+    /* Panel Administrateur */
+    .admin-panel {
+        background: linear-gradient(135deg, #141E30, #243B55);
+        color: white;
+        padding: 60px 30px;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        margin-bottom: 50px;
+    }
+    
+    /* Design Responsive */
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.5rem;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+        }
+        
+        .cta-title {
+            font-size: 2.2rem;
+        }
+    }
+</style>
+{% endblock %}
 
-    <a href="{% url 'create_demande' %}">create demande</a>
-    <br>
-    <ul>
-        <li><a href="{% url 'participant_donations' %}">📦 Mes dons</a></li>
-        <li><a href="{% url 'create_proposition' %}">➕ Créer une proposition</a></li>
-    </ul>
-{% endif %}
+{% block content %}
+<!-- Section Hero -->
+<section class="hero-section">
+    <div class="container position-relative">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h1 class="hero-title">
+                    <span class="brand">Espoir des Pauvres</span><br>
+                    Plateforme de Gestion des Dons
+                </h1>
+                <p class="hero-subtitle">
+                    Connecter la générosité aux besoins grâce à la technologie.
+                    Un écosystème complet où donateurs, bénéficiaires, validateurs et transporteurs
+                    collaborent pour transformer des vies et construire des communautés durables.
+                </p>
+                
+                {% if not user.is_authenticated %}
+                <div class="hero-buttons mt-4">
+                    <a href="{% url 'register' %}" class="btn btn-light btn-lg me-3 px-5 py-3" style="background: white; color: #141E30; font-weight: 600;">
+                        <i class="fas fa-rocket me-2"></i>Rejoindre Notre Mission
+                    </a>
+                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg px-5 py-3" style="border-width: 2px;">
+                        <i class="fas fa-sign-in-alt me-2"></i>Connexion Plateforme
+                    </a>
+                </div>
+                {% else %}
+                <div class="welcome-user mt-4">
+                    <div class="alert alert-success d-inline-block" style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);">
+                        <h4 class="mb-0">Bon retour, {{ user.username }} !</h4>
+                        <span class="badge bg-light text-dark px-3 py-2">
+                            <i class="fas fa-user-tag me-2"></i>{{ user.get_user_type_display|default:user.user_type|title }}
+                        </span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
 
-
-    {% if user.is_authenticated %}
-        <p>You are logged in as a {{ user.user_type }}.</p>
-        <a href="{% url 'create_proposition' %}">create proposition</a>
-        <a href="{% url 'logout' %}">Logout</a>
-    {% else %}
-        <p><a href="{% url 'login' %}">Login</a> or <a href="{% url 'register' %}">Register</a></p>
-    {% endif %}
-
-    {% if user.is_authenticated and user.user_type == "admin" %}
-        <h3>Admin Actions</h3>
-        <ul>
-            <li><a href="{% url 'create_admin' %}">Create Admin</a></li>
-            <li><a href="{% url 'create_membre' %}">Create Membre</a></li>
-            <li><a href="{% url 'create_transporteur' %}">Create Transporteur</a></li>
+<!-- Statistiques d'Impact -->
+<section class="impact-stats">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h2 class="display-4 fw-bold mb-3">Statistiques d'Impact Mondial</h2>
+                <p class="lead text-muted">Transformer des vies dans 15+ pays depuis 2015</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <!-- Statistique 1 -->
+            <div class="col-md-3 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--primary-gradient);">
+                        <i class="fas fa-hands-helping"></i>
+                    </div>
+                    <div class="stat-number" id="stat1">25,847</div>
+                    <div class="stat-label">Dons Réussis</div>
+                    <span class="stat-trend trend-up">
+                        <i class="fas fa-arrow-up me-1"></i>12.5% ce mois
+                    </span>
+                </div>
+            </div>
             
-        </ul>
-    {% endif %}
+            <!-- Statistique 2 -->
+            <div class="col-md-3 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--success-gradient);">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-number" id="stat2">184,235</div>
+                    <div class="stat-label">Vies Impactées</div>
+                    <span class="stat-trend trend-up">
+                        <i class="fas fa-arrow-up me-1"></i>8.3% ce trimestre
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Statistique 3 -->
+            <div class="col-md-3 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--warning-gradient);">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <div class="stat-number" id="stat3">8,942</div>
+                    <div class="stat-label">Missions de Livraison</div>
+                    <span class="stat-trend trend-up">
+                        <i class="fas fa-arrow-up me-1"></i>15.7% cette année
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Statistique 4 -->
+            <div class="col-md-3 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--secondary-gradient);">
+                        <i class="fas fa-globe-americas"></i>
+                    </div>
+                    <div class="stat-number" id="stat4">97.2</div>
+                    <div class="stat-label">Taux de Satisfaction (%)</div>
+                    <span class="stat-trend trend-up">
+                        <i class="fas fa-arrow-up me-1"></i>2.1% vs l'année dernière
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
-    {% if user.is_authenticated and user.user_type == "membre" %}
-        <a href="{% url 'membre_dashboard' %}">tritements des demandes</a>
-    {% endif %}
+<!-- Carte d'Impact Mondial -->
+<section class="global-impact">
+    <div class="container">
+        <div class="row align-items-center mb-5">
+            <div class="col-lg-6">
+                <h2 class="display-5 fw-bold mb-4">Notre Empreinte Mondiale</h2>
+                <p class="lead mb-4">
+                    Opérant sur plusieurs continents, nous avons établi des partenariats avec
+                    150+ ONG et agences gouvernementales pour maximiser notre impact.
+                </p>
+                
+                <div class="milestone-timeline">
+                    <div class="milestone">
+                        <h5 class="fw-bold">2015 - Fondation</h5>
+                        <p>Lancé à Paris avec 3 membres d'équipe</p>
+                    </div>
+                    <div class="milestone">
+                        <h5 class="fw-bold">2018 - Expansion Européenne</h5>
+                        <p>Étendu à 5 pays européens</p>
+                    </div>
+                    <div class="milestone">
+                        <h5 class="fw-bold">2020 - Transformation Numérique</h5>
+                        <p>Lancement de notre plateforme digitale complète</p>
+                    </div>
+                    <div class="milestone">
+                        <h5 class="fw-bold">2024 - Présence Mondiale</h5>
+                        <p>Actif dans 15+ pays avec 500+ volontaires</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="world-map">
+                    <!-- Marqueurs d'impact -->
+                    <div class="impact-marker" style="top: 30%; left: 20%;"></div>
+                    <div class="impact-marker" style="top: 40%; left: 40%;"></div>
+                    <div class="impact-marker" style="top: 35%; left: 60%;"></div>
+                    <div class="impact-marker" style="top: 55%; left: 50%;"></div>
+                    <div class="impact-marker" style="top: 65%; left: 75%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
-    {% if user.is_authenticated and user.user_type == "transporteur" %}
-    <h3>Transporteur Actions</h3>
-    <ul>
-        <a href="{% url 'transporteur_dashboard' %}">Transporteur Dashboard</a>
-
-        <li><a href="{% url 'transporteur_notifications' %}">📬 Voir mes notifications</a></li>
-    </ul>
+<!-- Tableau de Bord Administrateur (Uniquement pour les Admins) -->
+{% if user.is_authenticated and user.user_type == "admin" %}
+<div class="container mt-5">
+    <div class="admin-panel">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="display-5 fw-bold mb-3">
+                    <i class="fas fa-crown me-3"></i>Panneau de Contrôle Administrateur
+                </h2>
+                <p class="lead mb-0">Accès complet au système et tableau de bord analytique disponible</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="btn-group" role="group">
+                    <a href="{% url 'create_admin' %}" class="btn btn-light me-2">
+                        <i class="fas fa-user-plus"></i> Nouvel Admin
+                    </a>
+                    <a href="{% url 'create_membre' %}" class="btn btn-light me-2">
+                        <i class="fas fa-user-check"></i> Nouveau Membre
+                    </a>
+                    <a href="{% url 'create_transporteur' %}" class="btn btn-light">
+                        <i class="fas fa-truck"></i> Nouveau Transporteur
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endif %}
 
-{% if user.is_authenticated and user.user_type == "membre" %}
-    <a href="{% url 'membre_dashboard' %}">Traitements des demandes</a>
-    <a href="{% url 'stock_list' %}">📦 Voir le stock</a>
-{% endif %}
+<!-- Rôles de la Plateforme -->
+<section class="role-section">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h2 class="display-4 fw-bold mb-3">Nos Partenaires Écosystème</h2>
+                <p class="lead text-muted">Quatre piliers travaillant ensemble pour créer un impact durable</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <!-- Rôle Donateur -->
+            <div class="col-lg-3 col-md-6">
+                <div class="role-card">
+                    <div class="role-header">
+                        <div class="role-icon">
+                            <i class="fas fa-hands-helping"></i>
+                        </div>
+                        <h3 class="mb-0">Donateurs</h3>
+                        <p class="opacity-75 mb-0">Les Cœurs Généreux</p>
+                    </div>
+                    <div class="role-content">
+                        <p class="mb-4">Particuliers et entreprises transformant des objets inutilisés en opportunités qui changent des vies.</p>
+                        <ul class="role-features">
+                            <li>Dons déductibles d'impôts</li>
+                            <li>Suivi en temps réel</li>
+                            <li>Rapports d'impact</li>
+                            <li>Partenariats d'entreprise</li>
+                        </ul>
+                        {% if not user.is_authenticated %}
+                        <a href="{% url 'register' %}" class="btn w-100" style="background: var(--primary-gradient); color: white;">
+                            Devenir Donateur
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Rôle Bénéficiaire -->
+            <div class="col-lg-3 col-md-6">
+                <div class="role-card">
+                    <div class="role-header" style="background: var(--success-gradient);">
+                        <div class="role-icon">
+                            <i class="fas fa-hand-holding-heart"></i>
+                        </div>
+                        <h3 class="mb-0">Bénéficiaires</h3>
+                        <p class="opacity-75 mb-0">Ceux que Nous Servons</p>
+                    </div>
+                    <div class="role-content">
+                        <p class="mb-4">Particuliers et familles recevant des articles essentiels pour améliorer leur qualité de vie.</p>
+                        <ul class="role-features">
+                            <li>Accès gratuit</li>
+                            <li>Mise en relation prioritaire</li>
+                            <li>Services de livraison</li>
+                            <li>Support communautaire</li>
+                        </ul>
+                        {% if not user.is_authenticated %}
+                        <a href="{% url 'register' %}" class="btn w-100" style="background: var(--success-gradient); color: white;">
+                            Demander de l'Aide
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Rôle Validateur -->
+            <div class="col-lg-3 col-md-6">
+                <div class="role-card">
+                    <div class="role-header" style="background: var(--warning-gradient);">
+                        <div class="role-icon">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <h3 class="mb-0">Validateurs</h3>
+                        <p class="opacity-75 mb-0">Gardiens de la Qualité</p>
+                    </div>
+                    <div class="role-content">
+                        <p class="mb-4">Membres dédiés assurant la qualité, l'authenticité et la distribution appropriée des dons.</p>
+                        <ul class="role-features">
+                            <li>Vérification de la qualité</li>
+                            <li>Gestion des stocks</li>
+                            <li>Évaluation des besoins</li>
+                            <li>Suivi de l'impact</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Rôle Transporteur -->
+            <div class="col-lg-3 col-md-6">
+                <div class="role-card">
+                    <div class="role-header" style="background: var(--secondary-gradient);">
+                        <div class="role-icon">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <h3 class="mb-0">Transporteurs</h3>
+                        <p class="opacity-75 mb-0">Bâtisseurs de Ponts</p>
+                    </div>
+                    <div class="role-content">
+                        <p class="mb-4">Partenaires logistiques professionnels livrant l'espoir des donateurs à ceux dans le besoin.</p>
+                        <ul class="role-features">
+                            <li>Horaires flexibles</li>
+                            <li>Optimisation des trajets</li>
+                            <li>Livraison sécurisée</li>
+                            <li>Programme de compensation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
+<!-- Témoignages -->
+<section class="testimonial-section">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h2 class="display-4 fw-bold mb-3">Histoires de Réussite</h2>
+                <p class="lead opacity-75">Témoignages de nos membres</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-text">
+                        "Grâce à Espoir des Pauvres, notre école a reçu 50 ordinateurs qui fournissent maintenant une éducation numérique à 500+ élèves dans les zones rurales."
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            MR
+                        </div>
+                        <div>
+                            <h5 class="mb-1">Marie Rousseau</h5>
+                            <p class="mb-0 opacity-75">Directrice d'école, Lyon</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-text">
+                        "En tant qu'entreprise donatrice, nous avons vu nos contributions impacter directement les communautés. La transparence et l'efficacité sont inégalées."
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            TD
+                        </div>
+                        <div>
+                            <h5 class="mb-1">Thomas Dubois</h5>
+                            <p class="mb-0 opacity-75">Directeur RSE, TechCorp</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-text">
+                        "Être transporteur pour Espoir des Pauvres n'est pas juste un travail — c'est une mission. Chaque livraison donne l'impression de changer la vie de quelqu'un."
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            SJ
+                        </div>
+                        <div>
+                            <h5 class="mb-1">Sarah Johnson</h5>
+                            <p class="mb-0 opacity-75">Transporteuse, Région Parisienne</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
+<!-- CTA Final -->
+<section class="cta-section">
+    <div class="container position-relative">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h2 class="cta-title mb-4">Prêt à Faire la Différence ?</h2>
+                <p class="lead mb-5 opacity-90">
+                    Rejoignez notre communauté de 50,000+ membres qui créent activement des changements positifs dans le monde.
+                </p>
+                
+                {% if not user.is_authenticated %}
+                <div class="cta-buttons">
+                    <a href="{% url 'register' %}" class="cta-button me-3">
+                        <i class="fas fa-user-plus me-2"></i>Commencer Votre Voyage
+                    </a>
+                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg px-5 py-3">
+                        <i class="fas fa-sign-in-alt me-2"></i>Accéder à la Plateforme
+                    </a>
+                </div>
+                {% else %}
+                <div class="cta-buttons">
+                    <a href="{% url 'membre_dashboard' %}" class="cta-button">
+                        <i class="fas fa-tachometer-alt me-2"></i>Aller au Tableau de Bord
+                    </a>
+                </div>
+                {% endif %}
+                
+                <p class="mt-5 opacity-75">
+                    <small>Recommandé par 150+ organisations • 97.2% de satisfaction • Certifié ISO 9001:2015</small>
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
 
-</body>
-</html>
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Compteurs numériques animés
+    function animateCounter(element, start, end, duration) {
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            const value = Math.floor(progress * (end - start) + start);
+            element.textContent = value.toLocaleString();
+            
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            }
+        };
+        window.requestAnimationFrame(step);
+    }
+    
+    // Animer tous les compteurs de statistiques
+    const stats = [
+        { element: document.getElementById('stat1'), start: 0, end: 25847, duration: 2000 },
+        { element: document.getElementById('stat2'), start: 0, end: 184235, duration: 2500 },
+        { element: document.getElementById('stat3'), start: 0, end: 8942, duration: 1800 },
+        { element: document.getElementById('stat4'), start: 0, end: 97.2, duration: 1500 }
+    ];
+    
+    // Démarrer l'animation quand les statistiques entrent dans la vue
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                setTimeout(() => {
+                    stats.forEach(stat => {
+                        if (stat.element) {
+                            stat.element.innerHTML = stat.end.toLocaleString();
+                            stat.element.innerHTML = stat.element.innerHTML.replace(stat.end.toLocaleString(), '');
+                            animateCounter(stat.element, stat.start, stat.end, stat.duration);
+                        }
+                    });
+                }, 300);
+                
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.5 });
+    
+    // Observer la section des statistiques
+    const statsSection = document.querySelector('.impact-stats');
+    if (statsSection) {
+        observer.observe(statsSection);
+    }
+    
+    // Ajouter une animation pulsante au bouton CTA
+    const ctaButton = document.querySelector('.cta-button');
+    if (ctaButton) {
+        setInterval(() => {
+            ctaButton.style.transform = 'translateY(-5px)';
+            setTimeout(() => {
+                ctaButton.style.transform = 'translateY(0)';
+            }, 300);
+        }, 5000);
+    }
+    
+    // Ajouter un effet hover aux cartes de rôle
+    const roleCards = document.querySelectorAll('.role-card');
+    roleCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-15px) scale(1.02)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+    
+    // Animer les marqueurs de la carte mondiale
+    const markers = document.querySelectorAll('.impact-marker');
+    markers.forEach((marker, index) => {
+        setTimeout(() => {
+            marker.style.animationDelay = `${index * 0.5}s`;
+        }, 100);
+    });
+});
+</script>
+{% endblock %}

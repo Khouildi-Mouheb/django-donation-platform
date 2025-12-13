@@ -56,6 +56,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'donations.context_processors.home_stats',  # 
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -65,9 +66,10 @@ TEMPLATES = [
 ]
 
 
-STATIC_URL = '/static/'
-# If you have a global static folder
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',  # This is where your CSS files are
+]
 
 
 WSGI_APPLICATION = 'project.wsgi.application'
@@ -118,4 +120,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+
+
+
+STATIC_ROOT = BASE_DIR / 'staticfiles'

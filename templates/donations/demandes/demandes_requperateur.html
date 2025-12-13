@@ -1,4 +1,682 @@
-<h1>all demandes</h1>
-{% for demande in demandes  %}
-<p> {{demande.id}} </p>
-{% endfor %}
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Toutes les Demandes | DonationHub{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="dashboard-header mb-5">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="display-5 fw-bold">
+                    <i class="fas fa-list-alt me-2"></i> Toutes les demandes
+                </h1>
+                <p class="lead text-muted">Gérez et suivez toutes les demandes de dons</p>
+            </div>
+            <div class="text-end">
+                <div class="btn-group" role="group">
+                    <a href="{% url 'membre_dashboard' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i> Tableau de bord
+                    </a>
+                    <a href="{% url 'create_demande' %}" class="btn btn-primary">
+                        <i class="fas fa-plus-circle me-2"></i> Nouvelle demande
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-5">
+        <div class="col-md-3 mb-4">
+            <div class="card stat-card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="stat-icon bg-primary mb-3">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h3 class="stat-number">{{ demandes.count }}</h3>
+                    <p class="stat-label">Total des demandes</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card stat-card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="stat-icon bg-warning mb-3">
+                        <i class="fas fa-hourglass-half"></i>
+                    </div>
+                    <h3 class="stat-number">{{ demandes_en_attente }}</h3>
+                    <p class="stat-label">En attente</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card stat-card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="stat-icon bg-success mb-3">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3 class="stat-number">{{ demandes_validees }}</h3>
+                    <p class="stat-label">Validées</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card stat-card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="stat-icon bg-danger mb-3">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <h3 class="stat-number">{{ demandes_refusees }}</h3>
+                    <p class="stat-label">Refusées</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-filter me-2"></i> Filtres & Recherche
+                </h5>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#filtersCollapse">
+                    <i class="fas fa-sliders-h"></i>
+                </button>
+            </div>
+        </div>
+        <div class="collapse show" id="filtersCollapse">
+            <div class="card-body">
+                <div class="row">
+                    <!-- Status Filter -->
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-bold">Statut</label>
+                        <select class="form-select" id="statusFilter">
+                            <option value="all">Tous les statuts</option>
+                            <option value="en_attente">En attente</option>
+                            <option value="validee">Validée</option>
+                            <option value="refusee">Refusée</option>
+                            <option value="en_livraison">En livraison</option>
+                            <option value="terminee">Terminée</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Category Filter -->
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-bold">Catégorie</label>
+                        <select class="form-select" id="categoryFilter">
+                            <option value="all">Toutes les catégories</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Urgency Filter -->
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-bold">Urgence</label>
+                        <select class="form-select" id="urgencyFilter">
+                            <option value="all">Tous les niveaux</option>
+                            <option value="elevee">Élevée</option>
+                            <option value="moyenne">Moyenne</option>
+                            <option value="faible">Faible</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Search -->
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-bold">Recherche</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Type, bénéficiaire...">
+                            <button class="btn btn-outline-secondary" type="button" id="searchButton">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between mt-3">
+                    <button class="btn btn-outline-secondary" id="resetFilters">
+                        <i class="fas fa-redo me-2"></i> Réinitialiser
+                    </button>
+                    <div>
+                        <span class="text-muted" id="resultsCount">{{ demandes.count }} résultat(s)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Demands Table -->
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-table me-2"></i> Liste des demandes
+                </h5>
+                <div class="btn-group" role="group">
+                    <button class="btn btn-sm btn-outline-primary" id="exportBtn">
+                        <i class="fas fa-download me-2"></i> Exporter
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body p-0">
+            {% if demandes %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="demandesTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col" class="ps-4">
+                                <input type="checkbox" class="form-check-input" id="selectAll">
+                            </th>
+                            <th scope="col">ID</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Bénéficiaire</th>
+                            <th scope="col">Catégorie</th>
+                            <th scope="col">Urgence</th>
+                            <th scope="col">Statut</th>
+                            <th scope="col">Date</th>
+                            <th scope="col" class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for demande in demandes %}
+                        <tr class="demande-row" 
+                            data-status="{{ demande.statut }}"
+                            data-category="{{ demande.categorie_recherchee.id }}"
+                            data-urgency="{{ demande.urgence }}"
+                            data-search="{{ demande.type_materiel }} {{ demande.participant_requerant.username }}">
+                            <td class="ps-4">
+                                <input type="checkbox" class="form-check-input demande-checkbox" value="{{ demande.id }}">
+                            </td>
+                            <td>
+                                <strong class="text-primary">#{{ demande.id }}</strong>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="type-icon me-2">
+                                        <i class="fas fa-box"></i>
+                                    </div>
+                                    <div>
+                                        <strong>{{ demande.type_materiel|truncatechars:20 }}</strong>
+                                        <div class="text-muted small">{{ demande.quantite_desiree }} unité(s)</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="user-avatar bg-primary text-white me-2">
+                                        {{ demande.participant_requerant.username|first|upper }}
+                                    </div>
+                                    <div>
+                                        <strong>{{ demande.participant_requerant.username }}</strong>
+                                        <div class="text-muted small">{{ demande.ville }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ demande.categorie_recherchee.nom }}</span>
+                            </td>
+                            <td>
+                                <span class="badge 
+                                    {% if demande.urgence == 'elevee' %}bg-danger
+                                    {% elif demande.urgence == 'moyenne' %}bg-warning
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ demande.get_urgence_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge 
+                                    {% if demande.statut == 'en_attente' %}bg-warning
+                                    {% elif demande.statut == 'validee' %}bg-success
+                                    {% elif demande.statut == 'refusee' %}bg-danger
+                                    {% elif demande.statut == 'en_livraison' %}bg-primary
+                                    {% elif demande.statut == 'terminee' %}bg-info
+                                    {% else %}bg-secondary{% endif %} 
+                                    status-badge">
+                                    {{ demande.get_statut_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="small">
+                                    <div>{{ demande.date_demande|date:"d/m/Y" }}</div>
+                                    <div class="text-muted">{{ demande.date_demande|date:"H:i" }}</div>
+                                </div>
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{% url 'demande_detail' demande.id %}" 
+                                       class="btn btn-outline-primary" 
+                                       data-bs-toggle="tooltip" 
+                                       title="Voir détails">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    
+                                    {% if demande.statut == 'en_attente' and user.user_type == 'membre' %}
+                                    <button type="button" 
+                                            class="btn btn-outline-success" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#processModal{{ demande.id }}"
+                                            data-bs-tooltip="tooltip" 
+                                            title="Traiter">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    {% endif %}
+                                    
+                                    {% if demande.statut == 'validee' and user.user_type == 'membre' and not demande.transporteur_livraison %}
+                                    <a href="{% url 'assign_transporteur_demande' demande.id %}" 
+                                       class="btn btn-outline-warning"
+                                       data-bs-toggle="tooltip" 
+                                       title="Assigner transporteur">
+                                        <i class="fas fa-truck"></i>
+                                    </a>
+                                    {% endif %}
+                                    
+                                    <a href="{% url 'getDemandeRelatedItems' demande.id %}" 
+                                       class="btn btn-outline-info"
+                                       data-bs-toggle="tooltip" 
+                                       title="Objets similaires">
+                                        <i class="fas fa-search"></i>
+                                    </a>
+                                </div>
+                                
+                                <!-- Process Modal -->
+                                {% if demande.statut == 'en_attente' %}
+                                <div class="modal fade" id="processModal{{ demande.id }}" tabindex="-1">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Traiter la demande #{{ demande.id }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form method="post" action="{% url 'traiter_demande' demande.id %}">
+                                                {% csrf_token %}
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Action</label>
+                                                        <select class="form-select" name="action" required>
+                                                            <option value="">Choisir une action</option>
+                                                            <option value="valider">✅ Valider</option>
+                                                            <option value="refuser">❌ Refuser</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Raison du refus (optionnel)</label>
+                                                        <textarea class="form-control" name="raison_refus" rows="3" placeholder="Expliquez votre décision..."></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                                    <button type="submit" class="btn btn-primary">Confirmer</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Bulk Actions -->
+            <div class="bulk-actions bg-light p-3 border-top" id="bulkActions" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span id="selectedCount">0</span> demande(s) sélectionnée(s)
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-success" onclick="bulkAction('valider')">
+                            <i class="fas fa-check me-2"></i> Valider
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="bulkAction('refuser')">
+                            <i class="fas fa-times me-2"></i> Refuser
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">
+                            <i class="fas fa-times-circle me-2"></i> Annuler
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            {% else %}
+            <!-- Empty State -->
+            <div class="empty-state text-center py-5">
+                <div class="empty-state-icon mb-4">
+                    <i class="fas fa-inbox fa-4x text-muted"></i>
+                </div>
+                <h4 class="mb-3">Aucune demande</h4>
+                <p class="text-muted mb-4">Aucune demande de don n'a été soumise pour le moment.</p>
+                <a href="{% url 'create_demande' %}" class="btn btn-primary">
+                    <i class="fas fa-plus-circle me-2"></i> Créer une demande
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if demandes.has_other_pages %}
+        <div class="card-footer bg-white">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if demandes.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ demandes.previous_page_number }}">Précédent</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in demandes.paginator.page_range %}
+                        {% if demandes.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if demandes.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ demandes.next_page_number }}">Suivant</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-top: 1rem;
+    }
+    
+    .stat-card {
+        border-radius: 12px;
+        transition: transform 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        font-size: 1.5rem;
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 0.5rem 0;
+        color: #333;
+    }
+    
+    .stat-label {
+        color: #666;
+        font-weight: 500;
+        margin: 0;
+    }
+    
+    .table th {
+        font-weight: 600;
+        color: #495057;
+        border-top: none;
+    }
+    
+    .table td {
+        vertical-align: middle;
+        padding: 1rem 0.75rem;
+    }
+    
+    .user-avatar, .type-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+    
+    .type-icon {
+        background-color: #e9ecef;
+        color: #495057;
+    }
+    
+    .status-badge {
+        min-width: 100px;
+        font-weight: 500;
+    }
+    
+    .empty-state {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        border: 2px dashed #dee2e6;
+        padding: 4rem 2rem;
+    }
+    
+    .empty-state-icon {
+        opacity: 0.6;
+    }
+    
+    .bulk-actions {
+        position: sticky;
+        bottom: 0;
+        z-index: 100;
+    }
+    
+    .demande-row:hover {
+        background-color: #f8f9fa;
+    }
+    
+    @media (max-width: 768px) {
+        .dashboard-header {
+            padding: 1.5rem;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+        }
+        
+        .table-responsive {
+            font-size: 0.9rem;
+        }
+        
+        .btn-group-sm .btn {
+            padding: 0.25rem 0.5rem;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tooltips
+        const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        tooltips.forEach(tooltip => {
+            new bootstrap.Tooltip(tooltip);
+        });
+        
+        // Select all checkbox
+        const selectAll = document.getElementById('selectAll');
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.demande-checkbox');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+                updateBulkActions();
+            });
+        }
+        
+        // Individual checkbox change
+        document.querySelectorAll('.demande-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', updateBulkActions);
+        });
+        
+        // Filters
+        document.getElementById('statusFilter')?.addEventListener('change', applyFilters);
+        document.getElementById('categoryFilter')?.addEventListener('change', applyFilters);
+        document.getElementById('urgencyFilter')?.addEventListener('change', applyFilters);
+        document.getElementById('searchInput')?.addEventListener('input', applyFilters);
+        document.getElementById('searchButton')?.addEventListener('click', applyFilters);
+        
+        // Reset filters
+        document.getElementById('resetFilters')?.addEventListener('click', resetFilters);
+        
+        // Export button
+        document.getElementById('exportBtn')?.addEventListener('click', exportData);
+        
+        // Refresh button
+        document.getElementById('refreshBtn')?.addEventListener('click', function() {
+            window.location.reload();
+        });
+        
+        function updateBulkActions() {
+            const selectedCount = document.querySelectorAll('.demande-checkbox:checked').length;
+            const bulkActions = document.getElementById('bulkActions');
+            const selectedCountSpan = document.getElementById('selectedCount');
+            
+            if (selectedCount > 0) {
+                bulkActions.style.display = 'block';
+                selectedCountSpan.textContent = selectedCount;
+            } else {
+                bulkActions.style.display = 'none';
+            }
+            
+            // Update select all checkbox
+            const totalCheckboxes = document.querySelectorAll('.demande-checkbox').length;
+            const selectAll = document.getElementById('selectAll');
+            if (selectAll) {
+                selectAll.checked = selectedCount === totalCheckboxes;
+                selectAll.indeterminate = selectedCount > 0 && selectedCount < totalCheckboxes;
+            }
+        }
+        
+        function applyFilters() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const urgencyFilter = document.getElementById('urgencyFilter').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            let visibleCount = 0;
+            
+            document.querySelectorAll('.demande-row').forEach(row => {
+                const status = row.getAttribute('data-status');
+                const category = row.getAttribute('data-category');
+                const urgency = row.getAttribute('data-urgency');
+                const searchData = row.getAttribute('data-search').toLowerCase();
+                
+                const statusMatch = statusFilter === 'all' || status === statusFilter;
+                const categoryMatch = categoryFilter === 'all' || category === categoryFilter;
+                const urgencyMatch = urgencyFilter === 'all' || urgency === urgencyFilter;
+                const searchMatch = searchTerm === '' || searchData.includes(searchTerm);
+                
+                if (statusMatch && categoryMatch && urgencyMatch && searchMatch) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Update results count
+            document.getElementById('resultsCount').textContent = `${visibleCount} résultat(s)`;
+        }
+        
+        function resetFilters() {
+            document.getElementById('statusFilter').value = 'all';
+            document.getElementById('categoryFilter').value = 'all';
+            document.getElementById('urgencyFilter').value = 'all';
+            document.getElementById('searchInput').value = '';
+            applyFilters();
+        }
+        
+        function clearSelection() {
+            document.querySelectorAll('.demande-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            updateBulkActions();
+        }
+        
+        function bulkAction(action) {
+            const selectedIds = Array.from(document.querySelectorAll('.demande-checkbox:checked'))
+                .map(cb => cb.value);
+            
+            if (selectedIds.length === 0) {
+                alert('Veuillez sélectionner au moins une demande.');
+                return;
+            }
+            
+            if (confirm(`Voulez-vous vraiment ${action} ${selectedIds.length} demande(s) ?`)) {
+                // Here you would make an API call to perform bulk action
+                alert(`Action "${action}" appliquée à ${selectedIds.length} demande(s).\n\nCette fonctionnalité nécessiterait une vue backend dédiée.`);
+                
+                // For demonstration, just clear selection
+                clearSelection();
+            }
+        }
+        
+        function exportData() {
+            // Simple CSV export for demonstration
+            const rows = document.querySelectorAll('.demande-row:not([style*="display: none"])');
+            let csvContent = "data:text/csv;charset=utf-8,";
+            
+            // Headers
+            csvContent += "ID,Type,Bénéficiaire,Catégorie,Urgence,Statut,Date\n";
+            
+            // Data
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const rowData = [
+                    `#${row.querySelector('strong').textContent.replace('#', '')}`,
+                    row.querySelector('td:nth-child(3) strong').textContent,
+                    row.querySelector('td:nth-child(4) strong').textContent,
+                    row.querySelector('td:nth-child(5) .badge').textContent,
+                    row.querySelector('td:nth-child(6) .badge').textContent,
+                    row.querySelector('td:nth-child(7) .badge').textContent,
+                    row.querySelector('td:nth-child(8) div:first-child').textContent
+                ];
+                csvContent += rowData.map(cell => `"${cell}"`).join(",") + "\n";
+            });
+            
+            // Create download link
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "demandes.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Initialize filters
+        applyFilters();
+    });
+</script>
+{% endblock %}

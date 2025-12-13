@@ -2,84 +2,618 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Détails de la proposition</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détails de la proposition | DonationHub</title>
+    
     <!-- ✅ Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --success-gradient: linear-gradient(135deg, #42e695 0%, #3bb2b8 100%);
+            --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --danger-gradient: linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%);
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+        }
+        
+        /* Header */
+        .proposition-header {
+            background: var(--secondary-gradient);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .proposition-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.1;
+        }
+        
+        .status-badge {
+            font-size: 0.9rem;
+            padding: 0.5rem 1.2rem;
+            border-radius: 20px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Main Card */
+        .detail-card {
+            background: white;
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        
+        .card-header-custom {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 1.5rem;
+            border-bottom: none;
+        }
+        
+        .card-body-custom {
+            padding: 2rem;
+        }
+        
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .info-item {
+            background: #f8f9fa;
+            padding: 1.25rem;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+        
+        .info-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .info-item i {
+            color: #667eea;
+            margin-right: 10px;
+            width: 24px;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .info-value {
+            color: #212529;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+        /* Photo Section */
+        .photo-container {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px solid #f1f3f4;
+        }
+        
+        .don-photo {
+            max-width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 3px solid #f0f0f0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .don-photo:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        /* Action Cards */
+        .action-card {
+            background: white;
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .btn-custom {
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-success-custom {
+            background: var(--success-gradient);
+            color: white;
+        }
+        
+        .btn-success-custom:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(66, 230, 149, 0.4);
+            color: white;
+        }
+        
+        .btn-danger-custom {
+            background: var(--danger-gradient);
+            color: white;
+        }
+        
+        .btn-danger-custom:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 117, 140, 0.4);
+            color: white;
+        }
+        
+        .btn-primary-custom {
+            background: var(--primary-gradient);
+            color: white;
+        }
+        
+        .btn-primary-custom:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        
+        .btn-warning-custom {
+            background: var(--warning-gradient);
+            color: white;
+        }
+        
+        .btn-warning-custom:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(240, 147, 251, 0.4);
+            color: white;
+        }
+        
+        /* Alert Styling */
+        .alert-custom {
+            border-radius: 12px;
+            border: none;
+            padding: 1.25rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        /* Textarea */
+        .form-control-custom {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            resize: vertical;
+            min-height: 120px;
+        }
+        
+        .form-control-custom:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+        }
+        
+        /* Badge Colors */
+        .badge-en-attente { background: linear-gradient(135deg, #ffd166, #ffb347); color: #212529; }
+        .badge-validee { background: linear-gradient(135deg, #42e695, #3bb2b8); color: white; }
+        .badge-refusee { background: linear-gradient(135deg, #ff758c, #ff7eb3); color: white; }
+        .badge-terminee_donateur { background: linear-gradient(135deg, #4facfe, #00f2fe); color: white; }
+        .badge-terminee_transporteur { background: linear-gradient(135deg, #9d4edd, #560bad); color: white; }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .proposition-header {
+                padding: 1.5rem;
+                text-align: center;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .card-body-custom {
+                padding: 1.5rem;
+            }
+            
+            .don-photo {
+                height: 250px;
+            }
+        }
+    </style>
 </head>
 
-<body class="bg-light">
+<body>
 
-<div class="container mt-4">
-
-  <h2 class="fw-bold mb-3">Proposition #{{ proposition.id }} - {{ proposition.type_materiel }}</h2>
-
-  <div class="card shadow-sm mb-4">
-    <div class="card-body">
-
-      <p><strong>Donateur :</strong> {{ proposition.participant_donateur }}</p>
-      <p><strong>Quantité :</strong> {{ proposition.quantite }}</p>
-      <p><strong>État :</strong> {{ proposition.get_etat_display }}</p>
-      <p><strong>Description :</strong> {{ proposition.description }}</p>
-
-      <p>
-        <strong>Adresse ramassage :</strong>
-        {{ proposition.adresse_ramassage }}, {{ proposition.ville }} {{ proposition.code_postal }}
-      </p>
-
-      <p><strong>Disponibilité :</strong> {{ proposition.disponibilite_ramassage }}</p>
-      <p><strong>Statut :</strong> {{ proposition.get_statut_display }}</p>
-
-      {% if proposition.photos %}
-        <img src="{{ proposition.photos.url }}" class="img-fluid rounded mt-3" style="max-width:300px;" alt="Photo du don">
-      {% endif %}
-
-    </div>
-  </div>
-
-  <!-- Actions selon statut -->
-  {% if proposition.statut == "en_attente" %}
-    <div class="card shadow-sm p-3">
-
-      <form method="post" action="{% url 'traiter_proposition' proposition.id %}">
-        {% csrf_token %}
-
-        <button type="submit" name="action" value="valider" class="btn btn-success">✔ Valider</button>
-
-        <textarea name="raison_refus" class="form-control mt-3" placeholder="Raison du refus"></textarea>
-
-        <button type="submit" name="action" value="refuser" class="btn btn-danger mt-3">✖ Refuser</button>
-      </form>
-
+<div class="container">
+    
+    <!-- Header -->
+    <div class="proposition-header">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+            <div>
+                <h1 class="display-6 fw-bold mb-2">
+                    <i class="fas fa-gift me-3"></i>Proposition #{{ proposition.id }}
+                </h1>
+                <h2 class="h4 mb-3 opacity-90">{{ proposition.type_materiel }}</h2>
+                <div class="d-flex align-items-center flex-wrap gap-2">
+                    <span class="status-badge badge-{{ proposition.statut }}">
+                        {{ proposition.get_statut_display }}
+                    </span>
+                    {% if proposition.transporteur_assignee %}
+                    <span class="badge bg-info">
+                        <i class="fas fa-truck me-1"></i> Transport assigné
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="text-end">
+                <div class="text-white opacity-75">
+                    <small>Créée le {{ proposition.date_creation|date:"d/m/Y" }}</small>
+                </div>
+            </div>
+        </div>
     </div>
 
-  {% else %}
-    <div class="alert alert-secondary">
-      <em>Déjà traité par {{ proposition.membre_validateur }}</em>
+    <!-- Main Details Card -->
+    <div class="detail-card">
+        <div class="card-header-custom">
+            <h3 class="mb-0">
+                <i class="fas fa-info-circle me-2"></i>Détails de la proposition
+            </h3>
+        </div>
+        
+        <div class="card-body-custom">
+            <!-- Information Grid -->
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-user"></i> Donateur
+                    </div>
+                    <div class="info-value">
+                        {{ proposition.participant_donateur }}
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-hashtag"></i> Quantité
+                    </div>
+                    <div class="info-value">
+                        {{ proposition.quantite }} unité(s)
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-star"></i> État
+                    </div>
+                    <div class="info-value">
+                        {{ proposition.get_etat_display }}
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-map-marker-alt"></i> Localisation
+                    </div>
+                    <div class="info-value">
+                        {{ proposition.ville }} ({{ proposition.code_postal }})
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-calendar-alt"></i> Disponibilité
+                    </div>
+                    <div class="info-value">
+                        {{ proposition.disponibilite_ramassage|date:"d/m/Y" }}
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-home"></i> Adresse de ramassage
+                    </div>
+                    <div class="info-value">
+                        {{ proposition.adresse_ramassage }}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Description -->
+            <div class="mb-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="fas fa-align-left me-2"></i> Description
+                </h5>
+                <div class="bg-light p-4 rounded">
+                    <p class="mb-0">{{ proposition.description|linebreaks }}</p>
+                </div>
+            </div>
+            
+            <!-- Photo -->
+            {% if proposition.photos %}
+            <div class="photo-container">
+                <h5 class="fw-bold mb-3">
+                    <i class="fas fa-camera me-2"></i> Photo du don
+                </h5>
+                <img src="{{ proposition.photos.url }}" 
+                     class="don-photo" 
+                     alt="Photo du don">
+            </div>
+            {% endif %}
+        </div>
     </div>
 
-    {% if proposition.statut == "validee" and not proposition.transporteur_assignee %}
-      <a href="{% url 'assign_transporteur' proposition.id %}" class="btn btn-primary mb-3">
-        🚚 Assigner un transporteur
-      </a>
-
-    {% elif proposition.transporteur_assignee %}
-      <div class="alert alert-info">
-        <strong>Transporteur assigné :</strong> {{ proposition.transporteur_assignee }}
-      </div>
-    {% endif %}
-  {% endif %}
-
-  {% if user.user_type == "membre" and proposition.statut in "validee terminee_donateur terminee_transporteur" %}
-    <a href="{% url 'ajouter_au_stock' proposition.id %}" class="btn btn-warning">
-      📦 Ajouter au stock
-    </a>
-  {% endif %}
-
+    <!-- Actions Section -->
+    <div class="row">
+        <div class="col-12">
+            {% if proposition.statut == "en_attente" %}
+            <!-- Validation Actions -->
+            <div class="action-card">
+                <h4 class="fw-bold mb-4">
+                    <i class="fas fa-tasks me-2"></i> Traiter cette proposition
+                </h4>
+                
+                <form method="post" action="{% url 'traiter_proposition' proposition.id %}">
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <button type="submit" name="action" value="valider" class="btn btn-success-custom btn-custom w-100">
+                                <i class="fas fa-check-circle me-2"></i> Valider la proposition
+                            </button>
+                            <p class="small text-muted mt-2">
+                                La proposition sera validée et pourra recevoir un transporteur.
+                            </p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <button type="submit" name="action" value="refuser" class="btn btn-danger-custom btn-custom w-100">
+                                <i class="fas fa-times-circle me-2"></i> Refuser la proposition
+                            </button>
+                            <p class="small text-muted mt-2">
+                                La proposition sera refusée avec la raison ci-dessous.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label for="raison_refus" class="form-label fw-bold">
+                            <i class="fas fa-comment-dots me-2"></i> Raison du refus (optionnel)
+                        </label>
+                        <textarea name="raison_refus" 
+                                  id="raison_refus" 
+                                  class="form-control-custom" 
+                                  placeholder="Expliquez la raison du refus (facultatif)">
+                        </textarea>
+                        <small class="text-muted">Ce message sera visible par le donateur.</small>
+                    </div>
+                </form>
+            </div>
+            
+            {% else %}
+            <!-- Already Processed -->
+            <div class="alert alert-info alert-custom">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-info-circle fa-2x me-3"></i>
+                    <div>
+                        <h5 class="fw-bold mb-1">Proposition déjà traitée</h5>
+                        <p class="mb-0">
+                            Cette proposition a été traitée par <strong>{{ proposition.membre_validateur }}</strong>.
+                            Statut actuel : <span class="badge badge-{{ proposition.statut }}">{{ proposition.get_statut_display }}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Transport Assignment -->
+            {% if proposition.statut == "validee" and not proposition.transporteur_assignee %}
+            <div class="action-card">
+                <h4 class="fw-bold mb-3">
+                    <i class="fas fa-truck me-2"></i> Assigner un transporteur
+                </h4>
+                <p class="mb-4">Cette proposition est validée et prête pour le transport.</p>
+                <a href="{% url 'assign_transporteur' proposition.id %}" class="btn btn-primary-custom btn-custom">
+                    <i class="fas fa-truck-loading me-2"></i> Assigner un transporteur
+                </a>
+            </div>
+            
+            {% elif proposition.transporteur_assignee %}
+            <div class="action-card">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                    <div>
+                        <h4 class="fw-bold mb-2">
+                            <i class="fas fa-truck me-2"></i> Transporteur assigné
+                        </h4>
+                        <p class="mb-0">
+                            <strong>{{ proposition.transporteur_assignee }}</strong> est responsable du transport.
+                        </p>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-success p-2">
+                            <i class="fas fa-check-circle me-1"></i> Transport organisé
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endif %}
+            
+            <!-- Add to Stock (for members) -->
+            {% if user.user_type == "membre" and proposition.statut in "validee terminee_donateur terminee_transporteur" %}
+            <div class="action-card mt-3">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div>
+                        <h5 class="fw-bold mb-2">
+                            <i class="fas fa-warehouse me-2"></i> Gestion du stock
+                        </h5>
+                        <p class="mb-0 text-muted">
+                            Ajoutez cet objet au stock après réception.
+                        </p>
+                    </div>
+                    <div>
+                        <a href="{% url 'ajouter_au_stock' proposition.id %}" class="btn btn-warning-custom btn-custom">
+                            <i class="fas fa-boxes me-2"></i> Ajouter au stock
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Back Button -->
+    <div class="text-center mt-4">
+        <a href="javascript:history.back()" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-2"></i> Retour
+        </a>
+    </div>
 </div>
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add confirmation to actions
+        const validateBtn = document.querySelector('button[name="action"][value="valider"]');
+        const refuseBtn = document.querySelector('button[name="action"][value="refuser"]');
+        
+        if (validateBtn) {
+            validateBtn.addEventListener('click', function(e) {
+                if (!confirm('Êtes-vous sûr de vouloir valider cette proposition ?\n\nLa proposition sera marquée comme validée et pourra recevoir un transporteur.')) {
+                    e.preventDefault();
+                }
+            });
+        }
+        
+        if (refuseBtn) {
+            refuseBtn.addEventListener('click', function(e) {
+                const reason = document.querySelector('textarea[name="raison_refus"]').value;
+                if (!confirm('Êtes-vous sûr de vouloir refuser cette proposition ?' + 
+                           (reason ? '\n\nRaison du refus :\n' + reason : ''))) {
+                    e.preventDefault();
+                }
+            });
+        }
+        
+        // Add animation to status badge
+        const statusBadge = document.querySelector('.status-badge');
+        if (statusBadge) {
+            statusBadge.classList.add('animate__animated', 'animate__pulse');
+            setTimeout(() => {
+                statusBadge.classList.remove('animate__pulse');
+            }, 2000);
+        }
+        
+        // Add hover effect to info items
+        const infoItems = document.querySelectorAll('.info-item');
+        infoItems.forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-3px)';
+            });
+            
+            item.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+        
+        // Show photo in modal when clicked
+        const donPhoto = document.querySelector('.don-photo');
+        if (donPhoto) {
+            donPhoto.addEventListener('click', function() {
+                const modalHTML = `
+                    <div class="modal fade" id="photoModal" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Photo du don</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body text-center">
+                                    <img src="${this.src}" class="img-fluid rounded" alt="Photo du don">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Remove existing modal
+                const existingModal = document.getElementById('photoModal');
+                if (existingModal) existingModal.remove();
+                
+                // Add new modal
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+                
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('photoModal'));
+                modal.show();
+            });
+        }
+        
+        // Add loading state to buttons
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function() {
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Traitement en cours...';
+                }
+            });
+        }
+    });
+</script>
+
+<!-- Animate.css -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 
 </body>
 </html>

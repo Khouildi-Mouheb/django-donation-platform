@@ -1,105 +1,307 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
+{% extends 'base/base.html' %}
+{% load static %}
 
-    <!-- BOOTSTRAP CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <title>Tableau de bord Membre</title>
-</head>
-<body>
+{% block title %}Tableau de bord Membre | DonationHub{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
+    <!-- Header -->
+    <div class="dashboard-header mb-5">
+        <h1 class="display-5 fw-bold">📋 Tableau de bord Membre</h1>
+        <p class="lead text-muted">Gérez les demandes, propositions et transporteurs</p>
+    </div>
 
-  <h2 class="mb-4">📋 Tableau de bord Membre</h2>
-
-  <!-- ❗ Demandes -->
-  <h3 class="mt-4">Demandes de dons</h3>
-  {% for demande in demandes %}
-    <div class="card mb-3 shadow-sm">
-      <div class="card-body">
-
-        <h5 class="card-title">Demande #{{ demande.id }} - {{ demande.type_materiel }}</h5>
-        <a href="{% url 'demande_detail' demande.id %}" class="btn btn-info">
-          Voir détails
-        </a>
-        <p><strong>Statut :</strong> {{ demande.get_statut_display }}</p>
-
+    <!-- Demandes Section -->
+    <section class="mb-5">
+        <div class="section-header d-flex justify-content-between align-items-center mb-4">
+            <h2 class="h3 fw-bold">📥 Demandes de dons</h2>
+            <span class="badge bg-primary">{{ demandes.count }} demandes</span>
+        </div>
         
-
-      </div>
-    </div>
-  {% empty %}
-    <div class="alert alert-info">Aucune demande.</div>
-  {% endfor %}
-
-  <!-- ❗ Transporteurs -->
-  <h3 class="mt-5">Transporteurs</h3>
-  {% for transporteur in transporteurs %}
-    <div class="card mb-3 shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">Transporteur #{{ transporteur.id }} - {{ transporteur.username }}</h5>
-        <p><strong>Disponibilité :</strong> {{ transporteur.disponibilite }}</p>
-      </div>
-    </div>
-  {% empty %}
-    <div class="alert alert-info">Aucun transporteur.</div>
-  {% endfor %}
-
-  <!-- ❗ Propositions -->
-  <h3 class="mt-5">Propositions de dons</h3>
-  {% for proposition in propositions %}
-    <div class="card mb-3 shadow-sm">
-      <div class="card-body">
-
-        <h5 class="card-title">Proposition #{{ proposition.id }} - {{ proposition.type_materiel }}</h5>
-
-        <p><strong>Statut :</strong> {{ proposition.get_statut_display }}</p>
-        <p><strong>Donateur :</strong> {{ proposition.participant_donateur }}</p>
-
-        <!-- Voir détails -->
-        <a href="{% url 'proposition_detail' proposition.id %}" class="btn btn-info">
-          Voir détails
-        </a>
-
-        <!-- Contacter le participant -->
-        {% if proposition.participant_donateur %}
-        <a href="{% url 'chat_room' user.id proposition.participant_donateur.id %}" 
-           class="btn btn-primary mt-2">
-          💬 Contacter le participant
-        </a>
+        {% if demandes %}
+        <div class="row">
+            {% for demande in demandes %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm border-0 hover-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title fw-bold text-primary mb-0">
+                                Demande #{{ demande.id }}
+                            </h5>
+                            <span class="badge {% if demande.statut == 'en_attente' %}bg-warning{% elif demande.statut == 'validee' %}bg-success{% else %}bg-secondary{% endif %}">
+                                {{ demande.get_statut_display }}
+                            </span>
+                        </div>
+                        
+                        <h6 class="fw-semibold mb-2">{{ demande.type_materiel }}</h6>
+                        <p class="text-muted small mb-3">
+                            <i class="fas fa-user"></i> {{ demande.participant_requerant.username|default:"Anonyme" }}
+                        </p>
+                        
+                        <div class="card-actions mt-3">
+                            <a href="{% url 'demande_detail' demande.id %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye"></i> Voir détails
+                            </a>
+                            {% if demande.statut == 'en_attente' %}
+                            <a href="#" class="btn btn-success btn-sm ms-2" data-bs-toggle="modal" data-bs-target="#traiterDemande{{ demande.id }}">
+                                <i class="fas fa-check"></i> Traiter
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Modal for processing demande -->
+                {% if demande.statut == 'en_attente' %}
+                <div class="modal fade" id="traiterDemande{{ demande.id }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Traiter Demande #{{ demande.id }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form method="post" action="{% url 'traiter_demande' demande.id %}">
+                                {% csrf_token %}
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Action</label>
+                                        <select class="form-select" name="action" required>
+                                            <option value="">Choisir une action</option>
+                                            <option value="valider">✅ Valider</option>
+                                            <option value="refuser">❌ Refuser</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Raison du refus (optionnel)</label>
+                                        <textarea class="form-control" name="raison_refus" rows="3" placeholder="Expliquez pourquoi vous refusez cette demande..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                    <button type="submit" class="btn btn-primary">Confirmer</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state text-center py-5">
+            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+            <h4>Aucune demande</h4>
+            <p class="text-muted">Aucune demande de don n'a été soumise pour le moment.</p>
+        </div>
         {% endif %}
+    </section>
 
-        {% if proposition.statut == "en_attente" %}
-          <form method="post" action="{% url 'traiter_proposition' proposition.id %}" class="mt-3">
-            {% csrf_token %}
-
-            <button type="submit" name="action" value="valider" class="btn btn-success">
-              Valider
-            </button>
-
-            <textarea name="raison_refus" class="form-control mt-2" placeholder="Raison du refus"></textarea>
-
-            <button type="submit" name="action" value="refuser" class="btn btn-danger mt-2">
-              Refuser
-            </button>
-
-          </form>
+    <!-- Transporteurs Section -->
+    <section class="mb-5">
+        <div class="section-header d-flex justify-content-between align-items-center mb-4">
+            <h2 class="h3 fw-bold">🚚 Transporteurs disponibles</h2>
+            <span class="badge bg-primary">{{ transporteurs.count }} transporteurs</span>
+        </div>
+        
+        {% if transporteurs %}
+        <div class="row">
+            {% for transporteur in transporteurs %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="avatar-circle bg-primary text-white me-3">
+                                {{ transporteur.username|first|upper }}
+                            </div>
+                            <div>
+                                <h5 class="card-title mb-0">{{ transporteur.username }}</h5>
+                                <small class="text-muted">#{{ transporteur.id }}</small>
+                            </div>
+                        </div>
+                        
+                        <div class="transporteur-info">
+                            <p class="mb-2">
+                                <i class="fas fa-phone text-primary me-2"></i>
+                                {{ transporteur.telephone|default:"Non spécifié" }}
+                            </p>
+                            <p class="mb-2">
+                                <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                {{ transporteur.ville|default:"Ville non spécifiée" }}
+                            </p>
+                            <p class="mb-0">
+                                <strong>Disponibilité :</strong>
+                                {% if transporteur.disponibilite %}
+                                <span class="badge bg-success">Disponible</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Indisponible</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state text-center py-5">
+            <i class="fas fa-truck fa-3x text-muted mb-3"></i>
+            <h4>Aucun transporteur</h4>
+            <p class="text-muted">Aucun transporteur n'est enregistré dans le système.</p>
+        </div>
         {% endif %}
+    </section>
 
-      </div>
-    </div>
-  {% empty %}
-    <div class="alert alert-info">Aucune proposition.</div>
-  {% endfor %}
-
+    <!-- Propositions Section -->
+    <section>
+        <div class="section-header d-flex justify-content-between align-items-center mb-4">
+            <h2 class="h3 fw-bold">📦 Propositions de dons</h2>
+            <span class="badge bg-primary">{{ propositions.count }} propositions</span>
+        </div>
+        
+        {% if propositions %}
+        <div class="row">
+            {% for proposition in propositions %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm border-0 hover-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title fw-bold text-primary mb-0">
+                                Proposition #{{ proposition.id }}
+                            </h5>
+                            <span class="badge {% if proposition.statut == 'en_attente' %}bg-warning{% elif proposition.statut == 'validee' %}bg-success{% else %}bg-secondary{% endif %}">
+                                {{ proposition.get_statut_display }}
+                            </span>
+                        </div>
+                        
+                        <h6 class="fw-semibold mb-2">{{ proposition.type_materiel }}</h6>
+                        <p class="text-muted small mb-3">
+                            <i class="fas fa-user"></i> {{ proposition.participant_donateur.username }}
+                        </p>
+                        
+                        <div class="card-actions mt-3">
+                            <a href="{% url 'proposition_detail' proposition.id %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye"></i> Détails
+                            </a>
+                            
+                            {% if proposition.statut == 'en_attente' %}
+                            <a href="#" class="btn btn-success btn-sm ms-2" data-bs-toggle="modal" data-bs-target="#traiterProposition{{ proposition.id }}">
+                                <i class="fas fa-check"></i> Traiter
+                            </a>
+                            {% endif %}
+                            
+                            {% if proposition.statut == 'validee' and not proposition.transporteur_assignee %}
+                            <a href="{% url 'assign_transporteur' proposition.id %}" class="btn btn-warning btn-sm ms-2">
+                                <i class="fas fa-truck"></i> Assigner
+                            </a>
+                            {% endif %}
+                            
+                            {% if proposition.participant_donateur %}
+                            <a href="{% url 'chat_room' user.id proposition.participant_donateur.id %}" 
+                               class="btn btn-info btn-sm ms-2 mt-2">
+                                <i class="fas fa-comment"></i> Contacter
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Modal for processing proposition -->
+                {% if proposition.statut == 'en_attente' %}
+                <div class="modal fade" id="traiterProposition{{ proposition.id }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Traiter Proposition #{{ proposition.id }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form method="post" action="{% url 'traiter_proposition' proposition.id %}">
+                                {% csrf_token %}
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Action</label>
+                                        <select class="form-select" name="action" required>
+                                            <option value="">Choisir une action</option>
+                                            <option value="valider">✅ Valider</option>
+                                            <option value="refuser">❌ Refuser</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Raison du refus (optionnel)</label>
+                                        <textarea class="form-control" name="raison_refus" rows="3" placeholder="Expliquez pourquoi vous refusez cette proposition..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                    <button type="submit" class="btn btn-primary">Confirmer</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state text-center py-5">
+            <i class="fas fa-gift fa-3x text-muted mb-3"></i>
+            <h4>Aucune proposition</h4>
+            <p class="text-muted">Aucune proposition de don n'a été soumise pour le moment.</p>
+        </div>
+        {% endif %}
+    </section>
 </div>
+
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-top: 1rem;
+    }
+    
+    .section-header {
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .hover-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    
+    .avatar-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+    
+    .empty-state {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        border: 2px dashed #dee2e6;
+    }
+    
+    .card-actions .btn {
+        border-radius: 20px;
+        padding: 5px 15px;
+        font-size: 0.85rem;
+    }
+    
+    .transporteur-info p {
+        margin-bottom: 0.5rem;
+    }
+</style>
 {% endblock %}
-
-<!-- BOOTSTRAP JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-</body>
-</html>
