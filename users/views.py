@@ -198,7 +198,8 @@ def assign_transporteur_view(request, proposition_id):
                 receiver=transporteur,
                 proposition=proposition,
                 titre=f"Nouvelle mission: Proposition #{proposition.id}",
-                message="Vous avez été assigné pour ramasser ce don."
+                message="Vous avez été assigné pour ramasser ce don.",
+                demande=None,
             )
 
             messages.success(request, f"Transporteur {transporteur} assigné à la proposition #{proposition.id}.")
@@ -239,26 +240,73 @@ def transporteur_reponse(request, proposition_id):
     return redirect('transporteur_notifications')
 
 
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from notifications.models import Notification
+from donations.models import DemandeDon, PropositionDon
+
 @login_required
 def notification_detail(request, notif_id):
     notif = get_object_or_404(Notification, id=notif_id)
-    demande=notif.demande
-    if request.method=="POST":
-        action=request.POST.get("action")
-        if action=="marquer comme terminer":
-            demande.statut="terminee"
-            demande.transporteur_confirme=True
-            demande.save()
-            messages.success(request,f"Demande #{demande.id} marquée comme terminée.")
-            return redirect('transporteur_dashboard')
+    proposition = notif.proposition
+    demande = notif.demande
+    
+    # Ensure the notification belongs to the current user
+    if notif.receiver != request.user:
+        messages.error(request, "Accès non autorisé.")
+        return redirect('transporteur_notifications')
+    
+    if demande:
+        if request.method == "POST":
+            action = request.POST.get("action")
+            if action == "marquer comme terminer":
+                demande.statut = "terminee"
+                demande.transporteur_confirme = True
+                demande.save()
+                messages.success(request, f"Demande #{demande.id} marquée comme terminée.")
+                return redirect('transporteur_dashboard')
+            elif action == "accepter":  # Add this for confirmation
+                demande.transporteur_confirme = True
+                demande.statut = "en_livraison"
+                demande.save()
+                messages.success(request, f"Vous avez accepté la mission pour demande #{demande.id}.")
+                return redirect('transporteur_dashboard')
+            elif action == "refuser":  # Add this for refusal
+                demande.transporteur_confirme = False
+                demande.transporteur_livraison = None
+                demande.statut = "validee"
+                demande.save()
+                messages.warning(request, f"Vous avez refusé la mission pour demande #{demande.id}.")
+                return redirect('transporteur_dashboard')
 
-    notif.lu = True
-    notif.save()
+        notif.lu = True
+        notif.save()
 
-    return render(request, 'notifications/transporteur/notification_detail.html', {
-        'notif': notif,
-        'proposition': notif.proposition,
-    })
+        return render(request, 'notifications/transporteur/notification_detail.html', {
+            'notif': notif,
+            'demande': demande,
+        })
+    else:
+        if request.method == "POST":
+            action = request.POST.get("action")
+            action2=request.POST.get('marquer comme terminer')
+            if action == "accepter":
+                proposition.transporteur_statut = 'acceptee'
+                proposition.save()
+                messages.success(request, f"Proposition #{proposition.id} marquée comme acceptee.")
+                return redirect('transporteur_dashboard')
+            if action2 == "marquer comme terminer":
+                proposition.statut = 'terminee'
+                proposition.save()
+                return redirect('transporteur_dashboard')
+        notif.lu = True
+        notif.save()
+
+        return render(request, 'notifications/transporteur/notification_detail.html', {
+            'notif': notif,
+            'proposition': proposition,
+        })
 
 
 
@@ -267,15 +315,21 @@ def transporteur_dashboard(request):
     if not hasattr(request.user, 'transporteur'):
         messages.error(request, "Accès réservé aux transporteurs.")
         return redirect('home')
-
-    # Show only propositions accepted by this transporteur
+    
+    # Get propositions where transporteur is assigned and accepted
     propositions = PropositionDon.objects.filter(
         transporteur_assignee=request.user.transporteur,
-        transporteur_statut="acceptee"
+        transporteur_statut='acceptee'
     ).order_by('-date_proposition')
-
-    return render(request, 'dashboards/transporteur.html', {
-        'propositions': propositions
+    
+    # Get demandes where transporteur is assigned
+    demandes = DemandeDon.objects.filter(
+        transporteur_livraison=request.user.transporteur
+    ).exclude(statut='annulee').order_by('-date_demande')
+    
+    return render(request, "dashboards/transporteur.html", {
+        "propositions": propositions,
+        "demandes": demandes
     })
 
 
@@ -301,3 +355,29 @@ def terminer_proposition(request, proposition_id):
 
 
 
+@login_required
+def marquer_demande_terminee_transporteur(request, demande_id):
+    demande = get_object_or_404(DemandeDon, id=demande_id)
+    
+    if not hasattr(request.user, 'transporteur') or demande.transporteur_livraison != request.user.transporteur:
+        messages.error(request, "Vous n'êtes pas autorisé à terminer cette mission.")
+        return redirect('transporteur_dashboard')
+    
+    if demande.statut != 'terminee':
+        demande.statut = 'terminee'
+        demande.save()
+        messages.success(request, f"Demande #{demande.id} marquée comme terminée.")
+    
+    return redirect('transporteur_dashboard')
+
+
+def demandes_de_recuperateur(request,user_id):
+    participant_recurant=Participant.objects.get(id=user_id)
+    demandes=participant_recurant.demandes_dons.all()
+    return render(request,
+                  "donations/demandes/demandes_requperateur.html",
+                  {"demandes":demandes})
+
+
+def demandeur_confirme_reception(request):
+    pass

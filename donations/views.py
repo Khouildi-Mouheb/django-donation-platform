@@ -262,7 +262,7 @@ def assign_transporteur_demande(request, demande_id):
         transporteur_id = request.POST.get("transporteur_id")
         if transporteur_id:
             transporteur = get_object_or_404(Transporteur, id=transporteur_id)
-            demande.transporteur_assignee = transporteur
+            demande.transporteur_livraison = transporteur
             demande.statut = "validee"  # still valid until transporteur responds
             demande.date_validation = timezone.now()
             demande.membre_validateur = request.user.membre
@@ -271,8 +271,9 @@ def assign_transporteur_demande(request, demande_id):
             # Create notification for transporteur
             Notification.objects.create(
                 receiver=transporteur,
+                proposition=None,
                 demande=demande,
-                titre=f"Nouvelle mission: Proposition #{demande.id}",
+                titre=f"Nouvelle mission: demande #{demande.id}",
                 message="Vous avez été assigné pour twasseel ce don."
             )
 
@@ -282,7 +283,54 @@ def assign_transporteur_demande(request, demande_id):
     # If GET request, show a form to choose transporteur
     available_transporteurs = getAvailableTransporteurs()
     return render(request, "donations/demandes/assign_transporteur.html", {
-        "proposidemandetion": demande,
+        "demande": demande,
         "transporteurs": available_transporteurs
     })
 
+
+
+from notifications.models import Notification
+
+@login_required
+def transporteur_confirme_demande(request, demande_id):
+    demande = get_object_or_404(DemandeDon, id=demande_id)
+
+    if not hasattr(request.user, 'transporteur') or demande.transporteur_livraison != request.user.transporteur:
+        messages.error(request, "Vous n'êtes pas autorisé à répondre à cette mission.")
+        return redirect('transporteur_notifications')
+
+    if request.method == "POST":
+        action = request.POST.get('action')
+        if action == "accepter":
+            demande.transporteur_confirme = True
+            demande.statut = "en_livraison"  # Add this status change
+            demande.save()
+            
+            # Create notification for membre who validated
+            if demande.membre_validateur:
+                Notification.objects.create(
+                    receiver=demande.membre_validateur,
+                    demande=demande,
+                    titre=f"Mission acceptée: demande #{demande.id}",
+                    message=f"Le transporteur {request.user.transporteur} a accepté la mission."
+                )
+            
+            messages.success(request, f"Vous avez accepté la mission pour demande #{demande.id}.")
+        elif action == "refuser":
+            demande.transporteur_confirme = False
+            demande.transporteur_livraison = None  # Unassign transporteur
+            demande.statut = "validee"  # Back to validated status for reassignment
+            demande.save()
+            
+            # Create notification for membre who validated
+            if demande.membre_validateur:
+                Notification.objects.create(
+                    receiver=demande.membre_validateur,
+                    demande=demande,
+                    titre=f"Mission refusée: demande #{demande.id}",
+                    message=f"Le transporteur {request.user.transporteur} a refusé la mission."
+                )
+            
+            messages.warning(request, f"Vous avez refusé la mission pour demande #{demande.id}.")
+
+    return redirect('transporteur_notifications')

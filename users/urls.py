@@ -6,8 +6,13 @@ from .views import (
     transporteur_notifications, notification_detail,
     transporteur_reponse, transporteur_dashboard,
     terminer_proposition, 
-    get_user,  # ✅ make sure this is imported
+    get_user,
+      marquer_demande_terminee_transporteur ,
+    demandes_de_recuperateur # ✅ make sure this is imported
 )
+
+
+from donations.views import transporteur_confirme_demande
 
 urlpatterns = [
     path('register/', register_view, name='register'),
@@ -25,6 +30,14 @@ urlpatterns = [
     path('dashboard/membre/proposition/<int:proposition_id>/assign/', assign_transporteur_view, name='assign_transporteur'),
 
     # Transporteur notifications
+
+    path("dashboard/transporteur/demande/confirme/<int:demande_id>/",
+         transporteur_confirme_demande,
+         name="transporteur_confirme_demande"),
+    # In your urls.py
+path("dashboard/transporteur/demande/<int:demande_id>/terminer/", 
+     marquer_demande_terminee_transporteur, 
+     name="marquer_demande_terminee"),
     path('dashboard/transporteur/notifications/', transporteur_notifications, name='transporteur_notifications'),
     path('dashboard/transporteur/notifications/<int:notif_id>/', notification_detail, name='notification_detail'),
 
@@ -38,6 +51,8 @@ urlpatterns = [
     path("dashboard/transporteur/proposition/<int:proposition_id>/terminer/", terminer_proposition, name="terminer_proposition"),
     path("api/user/<int:user_id>/", get_user),
     
+
+   path('demandes_recuperateur/<int:user_id>/',demandes_de_recuperateur,name="demandes_de_recuperateur"),
 
     
 

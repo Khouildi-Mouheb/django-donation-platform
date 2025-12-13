@@ -200,6 +200,8 @@ class DemandeDon(models.Model):
     transporteur_livraison = models.ForeignKey(Transporteur, on_delete=models.SET_NULL, null=True, blank=True)
     date_livraison = models.DateField(null=True, blank=True)
     transporteur_confirme = models.BooleanField(default=False)
+    demandeur_confirme_reception=models.BooleanField(default=False,null=True,blank=True)
+
 
 
 

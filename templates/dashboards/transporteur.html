@@ -2,56 +2,129 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-
     <!-- BOOTSTRAP CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <title>Mes missions acceptées</title>
 </head>
 <body>
 
 {% block content %}
 <div class="container mt-4">
+    <h2 class="mb-4">🚚 Mes missions acceptées</h2>
 
-  <h2 class="mb-4">🚚 Mes missions acceptées</h2>
+    <!-- Display Propositions (Collections) -->
+    <h4 class="mb-3 text-primary">📦 Collectes à effectuer</h4>
+    {% if propositions %}
+        {% for proposition in propositions %}
+        <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <h5 class="card-title mb-3">
+                        Proposition #{{ proposition.id }} - {{ proposition.type_materiel }}
+                    </h5>
+                    <span class="badge bg-primary">Collecte</span>
+                </div>
 
-  {% for proposition in propositions %}
-    <div class="card mb-3 shadow-sm">
-      <div class="card-body">
+                <p><strong>Quantité :</strong> {{ proposition.quantite }}</p>
+                <p><strong>État :</strong> {{ proposition.get_etat_display }}</p>
+                <p><strong>Description :</strong> {{ proposition.description }}</p>
+                <p>
+                    <strong>Adresse de ramassage :</strong><br>
+                    {{ proposition.adresse_ramassage }},<br>
+                    {{ proposition.ville }} {{ proposition.code_postal }}
+                </p>
+                <p><strong>Disponibilité :</strong> {{ proposition.disponibilite_ramassage }}</p>
+                <p><strong>Statut :</strong> 
+                    <span class="badge {% if proposition.statut == 'terminee' %}bg-success{% elif proposition.statut == 'validee' %}bg-info{% else %}bg-warning{% endif %}">
+                        {{ proposition.get_statut_display }}
+                    </span>
+                </p>
+                <p><strong>Statut Transporteur :</strong> {{ proposition.get_transporteur_statut_display }}</p>
 
-        <h5 class="card-title mb-3">
-          Proposition #{{ proposition.id }} - {{ proposition.type_materiel }}
-        </h5>
+                {% if proposition.statut == 'validee' and proposition.transporteur_statut == 'acceptee' %}
+                    <form method="post" action="{% url 'terminer_proposition' proposition.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">
+                            ✅ Marquer comme terminée
+                        </button>
+                    </form>
+                {% elif proposition.statut == 'terminee' %}
+                    <p class="text-success fw-bold">✅ Mission terminée</p>
+                {% elif proposition.statut == 'validee' and proposition.transporteur_statut == 'en_attente' %}
+                    <p class="text-warning">⏳ En attente de votre réponse</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info">Aucune collecte à effectuer.</div>
+    {% endif %}
 
-        <p><strong>Quantité :</strong> {{ proposition.quantite }}</p>
-        <p><strong>État :</strong> {{ proposition.get_etat_display }}</p>
+    <!-- Display Demandes (Deliveries) -->
+    <h4 class="mb-3 text-success mt-5">🚚 Livraisons à effectuer</h4>
+    {% if demandes %}
+        {% for demande in demandes %}
+        <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <h5 class="card-title mb-3">
+                        Demande #{{ demande.id }} - {{ demande.type_materiel }}
+                    </h5>
+                    <span class="badge bg-success">Livraison</span>
+                </div>
 
-        <p>
-          <strong>Adresse :</strong>
-          {{ proposition.adresse_ramassage }},
-          {{ proposition.ville }} {{ proposition.code_postal }}
-        </p>
+                <p><strong>Catégorie :</strong> {{ demande.categorie_recherchee.nom }}</p>
+                <p><strong>Quantité désirée :</strong> {{ demande.quantite_desiree }}</p>
+                <p><strong>Description du besoin :</strong> {{ demande.description_besoin }}</p>
+                <p><strong>Urgence :</strong> {{ demande.get_urgence_display }}</p>
+                <p>
+                    <strong>Adresse de livraison :</strong><br>
+                    {{ demande.adresse_livraison }},<br>
+                    {{ demande.ville }} {{ demande.code_postal }}
+                </p>
+                <p><strong>Disponibilité :</strong> {{ demande.disponibilite_livraison|default:"Non spécifiée" }}</p>
+                <p><strong>Statut :</strong> 
+                    <span class="badge {% if demande.statut == 'terminee' %}bg-success{% elif demande.statut == 'validee' %}bg-info{% else %}bg-warning{% endif %}">
+                        {{ demande.get_statut_display }}
+                    </span>
+                </p>
+                <p><strong>Transporteur a confirmé :</strong> 
+                    {% if demande.transporteur_confirme %}
+                        <span class="text-success">✅ Oui</span>
+                    {% else %}
+                        <span class="text-warning">❌ Non</span>
+                    {% endif %}
+                </p>
 
-        <p><strong>Disponibilité :</strong> {{ proposition.disponibilite_ramassage }}</p>
-        <p><strong>Statut :</strong> {{ proposition.get_statut_display }}</p>
+                {% if demande.statut == 'validee' and not demande.transporteur_confirme %}
+                    <a href="{% url 'transporteur_confirme_demande' demande.id %}" class="btn btn-primary">
+                        🔄 Confirmer/Refuser la mission
+                    </a>
+                {% elif demande.transporteur_confirme and demande.statut == 'validee' %}
+                    <form method="post" action="{% url 'marquer_demande_terminee' demande.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success" name="action" value="marquer comme terminer">
+                            ✅ Marquer comme terminée
+                        </button>
+                    </form>
+                {% elif demande.statut == 'terminee' %}
+                    <p class="text-success fw-bold">✅ Mission terminée</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info">Aucune livraison à effectuer.</div>
+    {% endif %}
 
-        {% if proposition.statut != "terminee" %}
-          <form method="post" action="{% url 'terminer_proposition' proposition.id %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-success">
-              ✅ Marquer comme terminée
-            </button>
-          </form>
-        {% else %}
-          <p class="text-success fw-bold">Mission terminée ✅</p>
-        {% endif %}
-
-      </div>
-    </div>
-  {% empty %}
-    <div class="alert alert-info">Aucune mission acceptée.</div>
-  {% endfor %}
-
+    <!-- If no missions at all -->
+    {% if not propositions and not demandes %}
+        <div class="alert alert-info">
+            <h5>Aucune mission acceptée.</h5>
+            <p>Vos missions apparaîtront ici une fois que vous les aurez acceptées.</p>
+            <a href="{% url 'transporteur_notifications' %}" class="btn btn-primary">Voir mes notifications</a>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}
 

@@ -51,7 +51,7 @@
           <option value="">-- Choisir --</option>
           {% for t in transporteurs %}
             <option value="{{ t.id }}">
-              {{ t.user.get_full_name }} ({{ t.ville }})
+              {{ t.username }} 
             </option>
           {% endfor %}
         </select>
