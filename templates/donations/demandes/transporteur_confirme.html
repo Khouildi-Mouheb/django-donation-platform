@@ -1,531 +1,222 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}Confirmer la Mission | DonationHub{% endblock %}
+{% block title %}Confirmer la Mission{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <!-- Header -->
-    <div class="dashboard-header mb-5">
-        <h1 class="display-5 fw-bold">
-            <i class="fas fa-truck me-2"></i> Confirmer la mission
-        </h1>
-        <p class="lead text-muted">Confirmez ou refusez cette mission de livraison</p>
-    </div>
-
-    <!-- Demand Details Card -->
-    <div class="card shadow-lg border-0 mb-5">
-        <div class="card-header bg-primary text-white">
-            <div class="d-flex justify-content-between align-items-center">
-                <h4 class="card-title mb-0">
-                    <i class="fas fa-file-alt me-2"></i> Détails de la mission
-                </h4>
-                <span class="badge bg-light text-primary fs-6">Demande #{{ demande.id }}</span>
-            </div>
-        </div>
-        
-        <div class="card-body">
-            <!-- Status Badge -->
-            <div class="status-badge mb-4">
-                <span class="badge 
-                    {% if demande.statut == 'en_attente' %}bg-warning
-                    {% elif demande.statut == 'validee' %}bg-info
-                    {% elif demande.statut == 'en_livraison' %}bg-primary
-                    {% elif demande.statut == 'terminee' %}bg-success
-                    {% else %}bg-secondary{% endif %} 
-                    fs-6 p-3">
-                    <i class="fas 
-                        {% if demande.statut == 'en_attente' %}fa-clock
-                        {% elif demande.statut == 'validee' %}fa-check-circle
-                        {% elif demande.statut == 'en_livraison' %}fa-truck
-                        {% elif demande.statut == 'terminee' %}fa-flag-checkered
-                        {% else %}fa-question-circle{% endif %} 
-                        me-2"></i>
-                    Statut : {{ demande.get_statut_display }}
-                </span>
-            </div>
-
-            <div class="row">
-                <!-- Left Column - Demand Info -->
-                <div class="col-md-6">
-                    <h5 class="fw-bold text-primary mb-3">
-                        <i class="fas fa-box me-2"></i> Informations sur le don
-                    </h5>
-                    
-                    <div class="info-grid mb-4">
-                        <div class="info-item">
-                            <span class="label">Type de matériel</span>
-                            <span class="value fw-bold">{{ demande.type_materiel }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Catégorie</span>
-                            <span class="value">{{ demande.categorie_recherchee.nom }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Quantité désirée</span>
-                            <span class="value badge bg-info">{{ demande.quantite_desiree }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Urgence</span>
-                            <span class="value">
-                                <span class="badge {% if demande.urgence == 'elevee' %}bg-danger{% elif demande.urgence == 'moyenne' %}bg-warning{% else %}bg-info{% endif %}">
-                                    {{ demande.get_urgence_display }}
-                                </span>
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Beneficiary Info -->
-                    <div class="beneficiary-info bg-light p-3 rounded">
-                        <h6 class="fw-bold text-primary mb-3">
-                            <i class="fas fa-user me-2"></i> Bénéficiaire
-                        </h6>
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="beneficiary-avatar bg-primary text-white me-3">
-                                {{ demande.participant_requerant.username|first|upper }}
-                            </div>
-                            <div>
-                                <h6 class="mb-1">{{ demande.participant_requerant.username }}</h6>
-                                <small class="text-muted">Participant</small>
-                            </div>
-                        </div>
-                        <div>
-                            <p class="mb-1">
-                                <i class="fas fa-phone text-primary me-2"></i>
-                                {{ demande.telephone_contact|default:"Non spécifié" }}
-                            </p>
-                            <p class="mb-0">
-                                <i class="fas fa-envelope text-primary me-2"></i>
-                                {{ demande.participant_requerant.email }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right Column - Delivery Info -->
-                <div class="col-md-6">
-                    <h5 class="fw-bold text-primary mb-3">
-                        <i class="fas fa-map-marker-alt me-2"></i> Informations de livraison
-                    </h5>
-                    
-                    <div class="delivery-info bg-light p-3 rounded mb-4">
-                        <div class="mb-3">
-                            <strong>Adresse de livraison :</strong>
-                            <p class="mb-1">{{ demande.adresse_livraison }}</p>
-                        </div>
-                        <div class="mb-3">
-                            <strong>Ville :</strong>
-                            <span>{{ demande.ville }} {{ demande.code_postal }}</span>
-                        </div>
-                        <div class="mb-3">
-                            <strong>Disponibilité :</strong>
-                            <span>{{ demande.disponibilite_livraison|default:"Non spécifiée" }}</span>
-                        </div>
-                        {% if demande.notes_livraison %}
-                        <div>
-                            <strong>Notes :</strong>
-                            <p class="mb-0 small text-muted">{{ demande.notes_livraison }}</p>
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Description -->
-                    {% if demande.description_besoin %}
-                    <div class="description-box p-3 bg-light rounded">
-                        <h6 class="fw-bold text-primary mb-2">
-                            <i class="fas fa-align-left me-2"></i> Description du besoin
-                        </h6>
-                        <p class="mb-0">{{ demande.description_besoin|truncatechars:150 }}</p>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Transporteur Actions Card -->
-    {% if user.is_authenticated and user.user_type == "transporteur" %}
     <div class="card shadow-lg border-0">
-        <div class="card-header bg-success text-white">
+        <div class="card-header bg-primary text-white">
             <h4 class="card-title mb-0">
-                <i class="fas fa-user-tie me-2"></i> Actions Transporteur
+                <i class="fas fa-truck me-2"></i> Confirmer la mission
             </h4>
         </div>
         
         <div class="card-body">
-            <!-- Status Check -->
-            {% if demande.transporteur_livraison == user.transporteur %}
-            <div class="alert alert-info d-flex align-items-center mb-4">
-                <i class="fas fa-info-circle me-3 fa-lg"></i>
-                <div>
-                    <strong>Mission assignée à vous</strong>
-                    <p class="mb-0">Vous avez été assigné à cette mission de livraison.</p>
+            <!-- Display messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                        <i class="fas fa-info-circle me-2"></i>{{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <!-- Mission Info -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-info-circle me-2"></i>Détails de la mission</h5>
+                    <p><strong>ID:</strong> #{{ demande.id }}</p>
+                    <p><strong>Matériel:</strong> {{ demande.type_materiel }}</p>
+                    <p><strong>Quantité:</strong> {{ demande.quantite_desiree }}</p>
+                    <p><strong>Statut:</strong> 
+                        <span class="badge 
+                            {% if demande.statut == 'validee' %}bg-info
+                            {% elif demande.statut == 'en_cours' %}bg-warning
+                            {% elif demande.statut == 'en_livraison' %}bg-primary
+                            {% elif demande.statut == 'terminee' %}bg-success
+                            {% else %}bg-secondary{% endif %}">
+                            {{ demande.get_statut_display }}
+                        </span>
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <h5><i class="fas fa-map-marker-alt me-2"></i>Livraison</h5>
+                    <p><strong>Adresse:</strong> {{ demande.adresse_livraison }}</p>
+                    <p><strong>Ville:</strong> {{ demande.ville }} {{ demande.code_postal }}</p>
+                    <p><strong>Bénéficiaire:</strong> {{ demande.participant_requerant.user.username }}</p>
                 </div>
             </div>
-
-            <!-- Action Buttons based on current status -->
-            <form method="post" action="{% url 'transporteur_confirme_demande' demande.id %}" id="actionForm">
+            
+            <!-- Action Form -->
+            <form method="post">
                 {% csrf_token %}
                 
-                {% if not demande.transporteur_confirme %}
-                <!-- Not yet confirmed - Show accept/refuse options -->
-                <div class="confirmation-section mb-5">
-                    <h5 class="fw-bold text-primary mb-4">
-                        <i class="fas fa-question-circle me-2"></i> Confirmez-vous cette mission ?
-                    </h5>
+                {% if not demande.transporteur_confirme and demande.statut == 'validee' %}
+                <!-- Step 1: Accept/Refuse -->
+                <div class="mb-4">
+                    <h5 class="mb-3"><i class="fas fa-question-circle me-2"></i>Accepter ou refuser cette mission ?</h5>
                     
                     <div class="row">
+                        <!-- Accept Option -->
                         <div class="col-md-6 mb-3">
-                            <div class="option-card accept-option" onclick="selectAction('accepter')">
-                                <input type="radio" name="action" value="accepter" id="actionAccept" class="option-radio">
-                                <label for="actionAccept" class="option-label">
-                                    <div class="option-icon bg-success">
-                                        <i class="fas fa-check"></i>
+                            <div class="card h-100 border-2" 
+                                 onclick="selectOption('accept')"
+                                 id="acceptCard"
+                                 style="cursor: pointer; border-color: #28a745 !important;">
+                                <div class="card-body text-center">
+                                    <div class="mb-3">
+                                        <i class="fas fa-check-circle fa-3x text-success"></i>
                                     </div>
-                                    <div class="option-content">
-                                        <h6 class="fw-bold">Accepter la mission</h6>
-                                        <p class="small mb-0">Je confirme pouvoir effectuer cette livraison</p>
-                                    </div>
-                                </label>
+                                    <h5 class="text-success">Accepter</h5>
+                                    <p class="text-muted">Je confirme pouvoir effectuer cette livraison</p>
+                                    <input type="radio" name="action" value="accepter" id="acceptRadio" 
+                                           style="display: none;">
+                                </div>
                             </div>
                         </div>
                         
+                        <!-- Refuse Option -->
                         <div class="col-md-6 mb-3">
-                            <div class="option-card refuse-option" onclick="selectAction('refuser')">
-                                <input type="radio" name="action" value="refuser" id="actionRefuse" class="option-radio">
-                                <label for="actionRefuse" class="option-label">
-                                    <div class="option-icon bg-danger">
-                                        <i class="fas fa-times"></i>
+                            <div class="card h-100 border-2" 
+                                 onclick="selectOption('refuse')"
+                                 id="refuseCard"
+                                 style="cursor: pointer; border-color: #dc3545 !important;">
+                                <div class="card-body text-center">
+                                    <div class="mb-3">
+                                        <i class="fas fa-times-circle fa-3x text-danger"></i>
                                     </div>
-                                    <div class="option-content">
-                                        <h6 class="fw-bold">Refuser la mission</h6>
-                                        <p class="small mb-0">Je ne peux pas effectuer cette livraison</p>
-                                    </div>
-                                </label>
+                                    <h5 class="text-danger">Refuser</h5>
+                                    <p class="text-muted">Je ne peux pas effectuer cette livraison</p>
+                                    <input type="radio" name="action" value="refuser" id="refuseRadio" 
+                                           style="display: none;">
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Refusal Reason (hidden by default) -->
-                    <div id="refusalReasonSection" class="mt-4" style="display: none;">
-                        <label for="refusalReason" class="form-label fw-bold">
-                            <i class="fas fa-comment me-2"></i> Raison du refus (optionnel)
+                    
+                    <!-- Refusal Reason (hidden initially) -->
+                    <div id="refusalReasonDiv" class="mt-3" style="display: none;">
+                        <label for="raison_refus" class="form-label">
+                            <i class="fas fa-comment me-2"></i>Raison du refus (optionnel)
                         </label>
-                        <textarea name="raison_refus" id="refusalReason" 
-                                  class="form-control" rows="3" 
-                                  placeholder="Expliquez pourquoi vous refusez cette mission..."></textarea>
-                        <div class="form-text">Cette explication sera communiquée au membre</div>
+                        <textarea name="raison_refus" id="raison_refus" 
+                                  class="form-control" rows="3"
+                                  placeholder="Pourquoi refusez-vous cette mission ?"></textarea>
                     </div>
+                    
+                    <button type="submit" id="submitBtn" class="btn btn-primary btn-lg w-100 mt-3" disabled>
+                        <i class="fas fa-paper-plane me-2"></i> Confirmer
+                    </button>
                 </div>
                 
-                {% elif demande.transporteur_confirme and demande.statut == 'validee' %}
-                <!-- Confirmed but not started - Show start delivery option -->
-                <div class="delivery-start-section mb-5">
-                    <h5 class="fw-bold text-primary mb-4">
-                        <i class="fas fa-play-circle me-2"></i> Démarrer la livraison
-                    </h5>
-                    
+                {% elif demande.transporteur_confirme and demande.statut == 'en_cours' %}
+                <!-- Step 2: Start Delivery -->
+                <div class="text-center">
                     <div class="alert alert-success mb-4">
                         <i class="fas fa-check-circle me-2"></i>
-                        <strong>Mission acceptée</strong>
-                        <p class="mb-0">Vous avez déjà accepté cette mission.</p>
+                        Mission acceptée. Prêt à démarrer la livraison ?
                     </div>
-                    
-                    <button type="submit" name="action" value="demarrer" class="btn btn-primary btn-lg w-100">
+                    <button type="submit" name="action" value="demarrer" class="btn btn-primary btn-lg">
                         <i class="fas fa-play me-2"></i> Démarrer la livraison
                     </button>
                 </div>
                 
                 {% elif demande.statut == 'en_livraison' %}
-                <!-- In delivery - Show complete option -->
-                <div class="completion-section mb-5">
-                    <h5 class="fw-bold text-primary mb-4">
-                        <i class="fas fa-flag-checkered me-2"></i> Finaliser la mission
-                    </h5>
-                    
+                <!-- Step 3: Complete Delivery -->
+                <div class="text-center">
                     <div class="alert alert-info mb-4">
                         <i class="fas fa-truck me-2"></i>
-                        <strong>Livraison en cours</strong>
-                        <p class="mb-0">Vous êtes en train d'effectuer cette livraison.</p>
+                        Livraison en cours. Avez-vous terminé ?
                     </div>
-                    
-                    <button type="submit" name="action" value="marquer comme terminer" class="btn btn-success btn-lg w-100">
+                    <button type="submit" name="action" value="marquer comme terminer" class="btn btn-success btn-lg">
                         <i class="fas fa-check-circle me-2"></i> Marquer comme terminée
                     </button>
                 </div>
                 
                 {% elif demande.statut == 'terminee' %}
-                <!-- Completed -->
-                <div class="completion-section mb-5">
-                    <div class="alert alert-success text-center py-4">
-                        <i class="fas fa-flag-checkered fa-3x mb-3"></i>
-                        <h4 class="fw-bold">Mission terminée</h4>
-                        <p class="mb-0">Cette mission a été marquée comme terminée.</p>
-                    </div>
+                <!-- Step 4: Completed -->
+                <div class="alert alert-success text-center py-5">
+                    <i class="fas fa-flag-checkered fa-3x mb-3"></i>
+                    <h4>Mission terminée</h4>
+                    <p class="mb-0">Cette mission a été complétée avec succès.</p>
                 </div>
                 {% endif %}
-                
-                <!-- Navigation Buttons -->
-                <div class="d-flex justify-content-between pt-4 border-top">
-                    <a href="{% url 'transporteur_dashboard' %}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-2"></i> Retour au tableau de bord
-                    </a>
-                    
-                    {% if not demande.transporteur_confirme %}
-                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" disabled>
-                        <i class="fas fa-paper-plane me-2"></i> Confirmer la décision
-                    </button>
-                    {% endif %}
-                </div>
             </form>
             
-            {% else %}
-            <!-- Not assigned to this transporteur -->
-            <div class="alert alert-warning text-center py-5">
-                <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
-                <h4 class="fw-bold">Accès non autorisé</h4>
-                <p class="mb-4">Cette mission n'est pas assignée à votre compte transporteur.</p>
-                <a href="{% url 'transporteur_dashboard' %}" class="btn btn-primary">
-                    <i class="fas fa-arrow-left me-2"></i> Retour à votre tableau de bord
+            <!-- Back button -->
+            <div class="mt-4 text-center">
+                <a href="{% url 'transporteur_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i> Retour
                 </a>
             </div>
-            {% endif %}
         </div>
     </div>
-    {% endif %}
 </div>
 
-<style>
-    .dashboard-header {
-        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        color: white;
-        padding: 2rem;
-        border-radius: 15px;
-        margin-top: 1rem;
-    }
-    
-    .card {
-        border-radius: 12px;
-        overflow: hidden;
-    }
-    
-    .card-header {
-        padding: 1.2rem 1.5rem;
-        border-bottom: none;
-    }
-    
-    .status-badge .badge {
-        border-radius: 20px;
-        font-size: 1rem;
-    }
-    
-    .info-grid {
-        display: grid;
-        gap: 1rem;
-    }
-    
-    .info-item {
-        display: flex;
-        justify-content: space-between;
-        padding: 0.5rem 0;
-        border-bottom: 1px solid #f0f0f0;
-    }
-    
-    .info-item .label {
-        color: #666;
-        font-weight: 500;
-    }
-    
-    .info-item .value {
-        font-weight: 600;
-    }
-    
-    .beneficiary-avatar {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-size: 1.2rem;
-    }
-    
-    .delivery-info, .description-box {
-        border-left: 4px solid #28a745;
-    }
-    
-    /* Option Cards */
-    .option-card {
-        border: 2px solid #e0e0e0;
-        border-radius: 10px;
-        padding: 1.5rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        background: white;
-        height: 100%;
-    }
-    
-    .option-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-    }
-    
-    .accept-option:hover {
-        border-color: #28a745;
-        background-color: rgba(40, 167, 69, 0.05);
-    }
-    
-    .refuse-option:hover {
-        border-color: #dc3545;
-        background-color: rgba(220, 53, 69, 0.05);
-    }
-    
-    .option-card.selected {
-        border-width: 3px;
-    }
-    
-    .accept-option.selected {
-        border-color: #28a745;
-        background-color: rgba(40, 167, 69, 0.1);
-    }
-    
-    .refuse-option.selected {
-        border-color: #dc3545;
-        background-color: rgba(220, 53, 69, 0.1);
-    }
-    
-    .option-radio {
-        display: none;
-    }
-    
-    .option-label {
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-        margin: 0;
-    }
-    
-    .option-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.5rem;
-        margin-right: 1.5rem;
-        flex-shrink: 0;
-    }
-    
-    .option-content h6 {
-        margin: 0;
-        font-weight: 600;
-    }
-    
-    .option-content p {
-        margin: 0.25rem 0 0 0;
-        color: #666;
-    }
-    
-    /* Button Styles */
-    .btn-lg {
-        padding: 1rem 2rem;
-        border-radius: 10px;
-        font-weight: 600;
-    }
-    
-    #submitBtn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-    
-    /* Responsive */
-    @media (max-width: 768px) {
-        .dashboard-header {
-            padding: 1.5rem;
-        }
-        
-        .option-label {
-            flex-direction: column;
-            text-align: center;
-        }
-        
-        .option-icon {
-            margin-right: 0;
-            margin-bottom: 1rem;
-        }
-        
-        .btn-lg {
-            padding: 0.75rem 1.5rem;
-        }
-    }
-</style>
-
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        let selectedAction = null;
-        
-        // Form submission handler
-        document.getElementById('actionForm')?.addEventListener('submit', function(e) {
-            // If not confirmed yet and no action selected
-            if (!selectedAction && !document.querySelector('input[name="action"]:checked')) {
-                e.preventDefault();
-                alert('Veuillez sélectionner une action avant de soumettre.');
-                return false;
-            }
-            
-            // Show loading state
-            const submitBtn = document.getElementById('submitBtn');
-            if (submitBtn) {
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Traitement en cours...';
-                submitBtn.disabled = true;
-            }
-            
-            // For "démarrer" or "terminer" buttons, they already have loading states
-            const actionButtons = this.querySelectorAll('button[name="action"]');
-            actionButtons.forEach(btn => {
-                if (btn === document.activeElement) {
-                    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Traitement...';
-                    btn.disabled = true;
-                }
-            });
-        });
-        
-        function selectAction(action) {
-            selectedAction = action;
-            
-            // Reset all cards
-            document.querySelectorAll('.option-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            
-            // Select the clicked card
-            const selectedCard = document.querySelector(`.option-card[onclick="selectAction('${action}')"]`);
-            if (selectedCard) {
-                selectedCard.classList.add('selected');
-                
-                // Update radio button
-                document.getElementById(`action${action.charAt(0).toUpperCase() + action.slice(1)}`).checked = true;
-                
-                // Show/hide reason field
-                const reasonSection = document.getElementById('refusalReasonSection');
-                if (action === 'refuser') {
-                    reasonSection.style.display = 'block';
-                } else {
-                    reasonSection.style.display = 'none';
-                }
-                
-                // Enable submit button
-                const submitBtn = document.getElementById('submitBtn');
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                }
-            }
+let selectedOption = null;
+
+function selectOption(option) {
+    selectedOption = option;
+    
+    // Reset all cards
+    document.getElementById('acceptCard').style.backgroundColor = 'white';
+    document.getElementById('refuseCard').style.backgroundColor = 'white';
+    
+    // Highlight selected card
+    if (option === 'accept') {
+        document.getElementById('acceptCard').style.backgroundColor = '#d4edda';
+        document.getElementById('acceptRadio').checked = true;
+        document.getElementById('refusalReasonDiv').style.display = 'none';
+    } else if (option === 'refuse') {
+        document.getElementById('refuseCard').style.backgroundColor = '#f8d7da';
+        document.getElementById('refuseRadio').checked = true;
+        document.getElementById('refusalReasonDiv').style.display = 'block';
+    }
+    
+    // Enable submit button
+    document.getElementById('submitBtn').disabled = false;
+}
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const acceptRadio = document.getElementById('acceptRadio');
+    const refuseRadio = document.getElementById('refuseRadio');
+    
+    // Check if an option is selected (for accept/refuse step)
+    if (acceptRadio && refuseRadio) {
+        if (!acceptRadio.checked && !refuseRadio.checked) {
+            e.preventDefault();
+            alert('Veuillez sélectionner "Accepter" ou "Refuser"');
+            return false;
         }
-        
-        window.selectAction = selectAction;
-    });
+    }
+    
+    // Show loading state
+    const submitBtn = document.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Traitement...';
+        submitBtn.disabled = true;
+    }
+});
 </script>
+
+<style>
+.card {
+    transition: all 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.btn-lg {
+    padding: 12px 24px;
+    font-size: 1.1rem;
+    border-radius: 8px;
+}
+</style>
 {% endblock %}

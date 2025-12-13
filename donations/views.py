@@ -293,52 +293,51 @@ def assign_transporteur_demande(request, demande_id):
     })
 
 
+# donations/views.py
 @login_required
 def transporteur_confirme_demande(request, demande_id):
-    """Handle transporter confirmation for a demande."""
     demande = get_object_or_404(DemandeDon, id=demande_id)
-
+    
+    # Security check
     if not hasattr(request.user, 'transporteur') or demande.transporteur_livraison != request.user.transporteur:
-        messages.error(request, "Vous n'êtes pas autorisé à répondre à cette mission.")
-        return redirect('transporteur_notifications')
-
-    if request.method == "POST":
+        messages.error(request, "Accès non autorisé.")
+        return redirect('transporteur_dashboard')
+    
+    if request.method == 'POST':
         action = request.POST.get('action')
-        if action == "accepter":
+        
+        if action == 'accepter':
             demande.transporteur_confirme = True
-            demande.statut = "en_livraison"
+            demande.statut = 'en_cours'  # Changed from 'validee' to 'en_cours'
             demande.save()
+            messages.success(request, f"✅ Mission #{demande.id} acceptée!")
             
-            # Create notification for membre who validated
-            if demande.membre_validateur:
-                Notification.objects.create(
-                    receiver=demande.membre_validateur,
-                    demande=demande,
-                    titre=f"Mission acceptée: demande #{demande.id}",
-                    message=f"Le transporteur {request.user.transporteur} a accepté la mission."
-                )
-            
-            messages.success(request, f"Vous avez accepté la mission pour demande #{demande.id}.")
-        elif action == "refuser":
+        elif action == 'refuser':
+            raison_refus = request.POST.get('raison_refus', '')
             demande.transporteur_confirme = False
+            demande.transporteur_raison_refus = raison_refus
             demande.transporteur_livraison = None
-            demande.statut = "validee"
+            demande.statut = 'validee'
             demande.save()
+            messages.warning(request, f"❌ Mission #{demande.id} refusée.")
             
-            # Create notification for membre who validated
-            if demande.membre_validateur:
-                Notification.objects.create(
-                    receiver=demande.membre_validateur,
-                    demande=demande,
-                    titre=f"Mission refusée: demande #{demande.id}",
-                    message=f"Le transporteur {request.user.transporteur} a refusé la mission."
-                )
+        elif action == 'demarrer':
+            demande.statut = 'en_livraison'
+            demande.save()
+            messages.success(request, f"🚚 Livraison #{demande.id} démarrée!")
             
-            messages.warning(request, f"Vous avez refusé la mission pour demande #{demande.id}.")
-
-    return redirect('transporteur_notifications')
-
-
+        elif action == 'marquer comme terminer':
+            demande.statut = 'terminee'
+            demande.save()
+            messages.success(request, f"✅ Mission #{demande.id} terminée!")
+        
+        # Redirect back to the same page
+        return redirect('transporteur_confirme_demande', demande_id=demande_id)
+    
+    # GET request - display the page
+    return render(request, 'donations/demandes/transporteur_confirme_demande.html', {
+        'demande': demande
+    })
 # ============ COMPLETION VIEWS ============
 @login_required
 def terminer_proposition(request, proposition_id):

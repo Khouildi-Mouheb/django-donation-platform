@@ -8,7 +8,8 @@ from .views import (create_proposition , valider_demande,
                     demande_detail,
                     traiter_demande,
                     getDemandeRelatedItems,
-                    assign_transporteur_demande)
+                    assign_transporteur_demande,
+                    transporteur_confirme_demande   )
 
 urlpatterns = [
     path('demande/<int:demande_id>/traiter_demande/', traiter_demande, name='traiter_demande'),
@@ -27,5 +28,9 @@ urlpatterns = [
     path("dashboard/membre/stock/", stock_list, name="stock_list"), 
     path('demandes/create/',create_demande,name="create_demande"),
     path("demande/<int:demande_id>/",demande_detail,name="demande_detail"),
-    path("demande/<int:demande_id>/related_items/",getDemandeRelatedItems,name="related_items")
+    path("demande/<int:demande_id>/related_items/",getDemandeRelatedItems,name="related_items"),
+    path('demande/<int:demande_id>/confirmer/', 
+         transporteur_confirme_demande, 
+         name='transporteur_confirme_demande'),
+    
 ]

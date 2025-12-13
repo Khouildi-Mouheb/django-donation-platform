@@ -202,7 +202,8 @@ class DemandeDon(models.Model):
     transporteur_confirme = models.BooleanField(default=False)
     demandeur_confirme_reception=models.BooleanField(default=False,null=True,blank=True)
 
-
+    transporteur_date_reponse = models.DateTimeField(null=True, blank=True)
+    transporteur_raison_refus = models.TextField(blank=True) 
 
 
     class Meta:
