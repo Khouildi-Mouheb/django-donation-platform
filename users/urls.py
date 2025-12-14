@@ -10,6 +10,8 @@ from .views import (
       marquer_demande_terminee_transporteur ,
     demandes_de_recuperateur, # ✅ make sure this is imported
     transporteur_confirme_proposition,
+     participant_dashboard,
+     mes_missions_acceptees,
 )
 
 
@@ -60,9 +62,23 @@ path("dashboard/transporteur/demande/<int:demande_id>/terminer/",
      name="transporteur_confirme_proposition"),
 
   # users/urls.py
-path("dashboard/transporteur/proposition/confirme/<int:proposition_id>/",
+     path("dashboard/transporteur/proposition/confirme/<int:proposition_id>/",
      transporteur_confirme_proposition,
      name="transporteur_confirme_proposition"),
+
+     path('transporteur/notifications/', transporteur_notifications, name='transporteur_notifications'),
+    path('transporteur/notification/<int:notif_id>/', notification_detail, name='notification_detail'),
+    path('transporteur/proposition/<int:proposition_id>/confirmer/', 
+         transporteur_confirme_proposition, name='transporteur_confirme_proposition'),
+    
+    # Dashboard URLs
+    path('dashboard/membre/', membre_dashboard, name='membre_dashboard'),
+    path('dashboard/transporteur/', transporteur_dashboard, name='transporteur_dashboard'),
+    path('dashboard/participant/', participant_dashboard, name='participant_dashboard'),
+    # In urls.py
+path('transporteur/mes-missions/', mes_missions_acceptees, name='mes_missions_acceptees'),
+
+     
 
     
 

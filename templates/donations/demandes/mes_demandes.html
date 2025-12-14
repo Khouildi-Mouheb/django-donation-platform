@@ -116,35 +116,7 @@
                                     {% endif %}
                                 </small>
                             </div>
-                            
-                            <!-- Receiver confirms reception -->
-                            {% if demande.statut == 'terminee' and not demande.demandeur_confirme_reception %}
-                            <a href="{% url 'confirmer_reception_demande' demande.id %}" 
-                               class="btn btn-success btn-sm">
-                                <i class="fas fa-check me-1"></i> Confirmer réception
-                            </a>
-                            {% elif demande.demandeur_confirme_reception %}
-                            <span class="badge bg-success">
-                                <i class="fas fa-check me-1"></i> Reçu
-                            </span>
-                            {% endif %}
                         </div>
-                        
-                        <!-- Delivery status -->
-                        {% if demande.transporteur_confirme %}
-                        <div class="mt-2">
-                            <small class="text-muted">
-                                <i class="fas fa-info-circle me-1"></i>
-                                {% if demande.statut == 'terminee' %}
-                                Livraison terminée
-                                {% elif demande.statut == 'en_livraison' %}
-                                En cours de livraison
-                                {% else %}
-                                Prêt pour livraison
-                                {% endif %}
-                            </small>
-                        </div>
-                        {% endif %}
                     </div>
                     {% endif %}
 
@@ -156,12 +128,33 @@
                             <strong>Don attribué</strong>
                         </div>
                         <p class="mb-0 small">Proposition #{{ demande.don_attribue.id }} par {{ demande.don_attribue.participant_donateur.username }}</p>
-                        {% if demande.don_attribue %}
-                        <a href="{% url 'chat_room' user.id demande.don_attribue.participant_donateur.id %}" 
-                           class="btn btn-outline-primary btn-sm mt-2">
-                            <i class="fas fa-comment"></i> Contacter
-                        </a>
-                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Terminate Button Section -->
+                    {% if demande.statut != 'terminee' %}
+                    <div class="terminate-section mt-3 pt-3 border-top">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Si vous avez reçu votre don ou souhaitez annuler cette demande, vous pouvez la terminer.
+                        </div>
+                        <form method="POST" action="{% url 'mes_demandes' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="demande_id" value="{{ demande.id }}">
+                            <input type="hidden" name="action" value="terminer">
+                            <button type="submit" class="btn btn-danger w-100" onclick="return confirm('Êtes-vous sûr de vouloir terminer cette demande ? Cette action est irréversible.');">
+                                <i class="fas fa-flag-checkered me-2"></i> Terminer cette demande
+                            </button>
+                        </form>
+                    </div>
+                    {% elif demande.statut == 'terminee' %}
+                    <div class="terminated-section mt-3 pt-3 border-top">
+                        <div class="alert alert-success text-center">
+                            <i class="fas fa-check-circle me-2"></i> Demande terminée
+                            {% if demande.date_modified %}
+                            <br><small>Terminée le {{ demande.date_modified|date:"d/m/Y H:i" }}</small>
+                            {% endif %}
+                        </div>
                     </div>
                     {% endif %}
                 </div>
@@ -175,14 +168,20 @@
                             <i class="fas fa-info-circle"></i> Détails
                         </button>
                         
-                        {% if demande.statut == 'terminee' and not demande.demandeur_confirme_reception %}
-                        <a href="{% url 'confirmer_reception_demande' demande.id %}" 
-                           class="btn btn-success btn-sm">
-                            <i class="fas fa-check-circle me-1"></i> Confirmer réception
-                        </a>
-                        {% elif demande.demandeur_confirme_reception %}
+                        <!-- Terminate button for non-terminated demands -->
+                        {% if demande.statut != 'terminee' %}
+                        <form method="POST" action="{% url 'mes_demandes' %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="demande_id" value="{{ demande.id }}">
+                            <input type="hidden" name="action" value="terminer">
+                            <button type="submit" class="btn btn-danger btn-sm" 
+                                    onclick="return confirm('Êtes-vous sûr de vouloir terminer cette demande ? Cette action est irréversible.');">
+                                <i class="fas fa-flag-checkered me-1"></i> Terminer
+                            </button>
+                        </form>
+                        {% elif demande.statut == 'terminee' %}
                         <span class="badge bg-success p-2">
-                            <i class="fas fa-check me-1"></i> Réception confirmée
+                            <i class="fas fa-check me-1"></i> Terminée
                         </span>
                         {% endif %}
                     </div>
@@ -193,6 +192,12 @@
                             <span>Date création:</span>
                             <span>{{ demande.date_demande|date:"d/m/Y" }}</span>
                         </div>
+                        {% if demande.date_modified %}
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>Dernière mise à jour:</span>
+                            <span>{{ demande.date_modified|date:"d/m/Y H:i"|default:"-" }}</span>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -300,20 +305,10 @@
                                     
                                     {% if demande.statut == 'terminee' %}
                                     <div class="timeline-item-detailed">
-                                        <div class="timeline-date">{{ demande.date_livraison|date:"d/m/Y"|default:"Aujourd'hui" }}</div>
+                                        <div class="timeline-date">{{ demande.date_modified|date:"d/m/Y H:i"|default:"Maintenant" }}</div>
                                         <div class="timeline-content">
-                                            <strong>Livraison terminée</strong>
-                                            <p class="mb-0 small">Transporteur a marqué la livraison comme terminée</p>
-                                        </div>
-                                    </div>
-                                    {% endif %}
-                                    
-                                    {% if demande.demandeur_confirme_reception %}
-                                    <div class="timeline-item-detailed">
-                                        <div class="timeline-date">Maintenant</div>
-                                        <div class="timeline-content">
-                                            <strong>Réception confirmée</strong>
-                                            <p class="mb-0 small">Vous avez confirmé la réception des articles</p>
+                                            <strong>Demande terminée</strong>
+                                            <p class="mb-0 small">Vous avez terminé cette demande</p>
                                         </div>
                                     </div>
                                     {% endif %}
@@ -322,14 +317,19 @@
                             
                             <!-- Action Buttons in Modal -->
                             <div class="mt-4">
-                                {% if demande.statut == 'terminee' and not demande.demandeur_confirme_reception %}
-                                <a href="{% url 'confirmer_reception_demande' demande.id %}" 
-                                   class="btn btn-success w-100">
-                                    <i class="fas fa-check-circle me-2"></i> Confirmer la réception
-                                </a>
-                                {% elif demande.demandeur_confirme_reception %}
+                                {% if demande.statut != 'terminee' %}
+                                <form method="POST" action="{% url 'mes_demandes' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="demande_id" value="{{ demande.id }}">
+                                    <input type="hidden" name="action" value="terminer">
+                                    <button type="submit" class="btn btn-danger w-100" 
+                                            onclick="return confirm('Êtes-vous sûr de vouloir terminer cette demande ? Cette action est irréversible.');">
+                                        <i class="fas fa-flag-checkered me-2"></i> Terminer cette demande
+                                    </button>
+                                </form>
+                                {% elif demande.statut == 'terminee' %}
                                 <div class="alert alert-success text-center">
-                                    <i class="fas fa-check-circle me-2"></i> Réception confirmée
+                                    <i class="fas fa-check-circle me-2"></i> Demande terminée
                                 </div>
                                 {% endif %}
                             </div>
@@ -467,6 +467,17 @@
     border-left: 3px solid #17a2b8;
 }
 
+/* Terminate Section */
+.terminate-section {
+    background-color: #fff3cd;
+    border-radius: 8px;
+}
+
+.terminated-section {
+    background-color: #d1e7dd;
+    border-radius: 8px;
+}
+
 /* Empty State */
 .empty-state {
     background-color: #f8f9fa;
@@ -506,28 +517,25 @@
 </style>
 
 <script>
-// Modal auto-focus
 document.addEventListener('DOMContentLoaded', function() {
     // Handle modal show events
     var modals = document.querySelectorAll('.modal');
     modals.forEach(function(modal) {
         modal.addEventListener('shown.bs.modal', function() {
-            // Focus on first button in modal
             var btn = this.querySelector('button, a, input');
             if (btn) btn.focus();
         });
     });
     
-    // Update badge colors based on status
-    document.querySelectorAll('.card').forEach(function(card) {
-        var statusBadge = card.querySelector('.badge');
-        if (statusBadge) {
-            var status = statusBadge.textContent.toLowerCase();
-            if (status.includes('terminée') || status.includes('terminee')) {
-                statusBadge.classList.remove('bg-warning', 'bg-info', 'bg-primary');
-                statusBadge.classList.add('bg-success');
+    // Handle terminate button clicks
+    document.querySelectorAll('form button[type="submit"]').forEach(function(button) {
+        button.addEventListener('click', function(e) {
+            if (this.closest('form').querySelector('input[name="action"]').value === 'terminer') {
+                if (!confirm('Êtes-vous sûr de vouloir terminer cette demande ? Cette action est irréversible.')) {
+                    e.preventDefault();
+                }
             }
-        }
+        });
     });
 });
 </script>

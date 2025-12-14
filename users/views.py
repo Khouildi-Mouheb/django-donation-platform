@@ -149,6 +149,39 @@ def create_admin(request):
     return render(request, "users/admin/create_admin.html", {"form": form})
 
 
+
+# Add to users/views.py
+@login_required
+def participant_dashboard(request):
+    """Participant dashboard showing their donations and requests."""
+    if not hasattr(request.user, 'participant'):
+        messages.error(request, "Accès réservé aux participants.")
+        return redirect('home')
+    
+    # Get user's propositions and demandes
+    propositions = PropositionDon.objects.filter(
+        participant_donateur=request.user.participant
+    ).order_by('-date_proposition')[:5]
+    
+    demandes = DemandeDon.objects.filter(
+        participant_requerant=request.user.participant
+    ).order_by('-date_demande')[:5]
+    
+    # Get unread notifications
+    notifications_count = Notification.objects.filter(
+        receiver=request.user,
+        lu=False
+    ).count()
+    
+    context = {
+        'propositions': propositions,
+        'demandes': demandes,
+        'notifications_count': notifications_count,
+    }
+    
+    return render(request, "dashboards/participant.html", context)
+
+
 @admin_required
 def create_membre(request):
     """Create a new member user (admin only)."""
@@ -219,23 +252,187 @@ def transporteur_dashboard(request):
         messages.error(request, "Accès réservé aux transporteurs.")
         return redirect('home')
 
-    # Get propositions where transporteur is assigned and accepted
+    # Handle form submissions
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'terminer_proposition':
+            proposition_id = request.POST.get('proposition_id')
+            if proposition_id:
+                proposition = get_object_or_404(PropositionDon, id=proposition_id)
+                
+                # Check if this transporter owns the proposition
+                if proposition.transporteur_assignee == request.user.transporteur:
+                    # Mark proposition as completed
+                    proposition.statut = 'terminee'
+                    proposition.date_validation = timezone.now()
+                    proposition.save()
+                    
+                    messages.success(request, f"Collecte #{proposition.id} marquée comme terminée !")
+                    return redirect('transporteur_dashboard')
+                else:
+                    messages.error(request, "Vous n'êtes pas autorisé à terminer cette collecte.")
+        
+        elif action == 'terminer_demande':
+            demande_id = request.POST.get('demande_id')
+            if demande_id:
+                demande = get_object_or_404(DemandeDon, id=demande_id)
+                
+                # Check if this transporter owns the demande
+                if demande.transporteur_livraison == request.user.transporteur:
+                    # Mark demande as completed
+                    demande.statut = 'terminee'
+                    demande.date_validation = timezone.now()
+                    demande.save()
+                    
+                    messages.success(request, f"Livraison #{demande.id} marquée comme terminée !")
+                    return redirect('transporteur_dashboard')
+                else:
+                    messages.error(request, "Vous n'êtes pas autorisé à terminer cette livraison.")
+        
+        elif action == 'accepter_demande':
+            demande_id = request.POST.get('demande_id')
+            if demande_id:
+                demande = get_object_or_404(DemandeDon, id=demande_id)
+                
+                # Check if this transporter owns the demande
+                if demande.transporteur_livraison == request.user.transporteur:
+                    # Accept the demande
+                    demande.transporteur_confirme = True
+                    demande.statut = 'validee'  # Keep as validee, transporter can now complete it
+                    demande.save()
+                    
+                    messages.success(request, f"Mission #{demande.id} acceptée !")
+                    return redirect('transporteur_dashboard')
+                else:
+                    messages.error(request, "Vous n'êtes pas autorisé à accepter cette mission.")
+    
+    # Get ACTIVE propositions where transporteur is assigned and accepted (not terminated)
     propositions = PropositionDon.objects.filter(
         transporteur_assignee=request.user.transporteur,
         transporteur_statut='acceptee'
-    ).order_by('-date_proposition')
+    ).exclude(statut='terminee').order_by('-date_proposition')
 
-    # Get demandes where transporteur is assigned
+    # Get TERMINATED propositions
+    terminated_propositions = PropositionDon.objects.filter(
+        transporteur_assignee=request.user.transporteur,
+        transporteur_statut='acceptee',
+        statut='terminee'
+    ).order_by('-date_validation')
+
+    # Get ACTIVE demandes where transporteur is assigned (not terminated)
     demandes = DemandeDon.objects.filter(
         transporteur_livraison=request.user.transporteur
-    ).exclude(statut='annulee').order_by('-date_demande')
+    ).exclude(statut__in=['annulee', 'terminee']).order_by('-date_demande')
+
+    # Get TERMINATED demandes
+    terminated_demandes = DemandeDon.objects.filter(
+        transporteur_livraison=request.user.transporteur,
+        statut='terminee'
+    ).order_by('-date_validation')
 
     return render(request, "dashboards/transporteur.html", {
         "propositions": propositions,
-        "demandes": demandes
+        "demandes": demandes,
+        "terminated_propositions": terminated_propositions,
+        "terminated_demandes": terminated_demandes,
     })
 
-
+@login_required
+def mes_missions_acceptees(request):
+    """View missions accepted by the transporter"""
+    # Check if user is a transporter
+    if not hasattr(request.user, 'transporteur'):
+        messages.error(request, "Accès non autorisé.")
+        return redirect('home')
+    
+    # Handle form submissions
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'terminer_proposition':
+            proposition_id = request.POST.get('proposition_id')
+            if proposition_id:
+                proposition = get_object_or_404(PropositionDon, id=proposition_id)
+                
+                # Check if this transporter owns the proposition
+                if proposition.transporteur_assignee == request.user.transporteur:
+                    # Mark proposition as completed
+                    proposition.statut = 'terminee'
+                    proposition.date_validation = timezone.now()
+                    proposition.save()
+                    
+                    messages.success(request, f"Collecte #{proposition.id} marquée comme terminée !")
+                    return redirect('mes_missions_acceptees')
+                else:
+                    messages.error(request, "Vous n'êtes pas autorisé à terminer cette collecte.")
+        
+        elif action == 'terminer_demande':
+            demande_id = request.POST.get('demande_id')
+            if demande_id:
+                demande = get_object_or_404(DemandeDon, id=demande_id)
+                
+                # Check if this transporter owns the demande
+                if demande.transporteur_livraison == request.user.transporteur:
+                    # Mark demande as completed
+                    demande.statut = 'terminee'
+                    demande.date_validation = timezone.now()
+                    demande.save()
+                    
+                    messages.success(request, f"Livraison #{demande.id} marquée comme terminée !")
+                    return redirect('mes_missions_acceptees')
+                else:
+                    messages.error(request, "Vous n'êtes pas autorisé à terminer cette livraison.")
+        
+        elif action == 'accepter_demande':
+            demande_id = request.POST.get('demande_id')
+            if demande_id:
+                demande = get_object_or_404(DemandeDon, id=demande_id)
+                
+                # Check if this transporter owns the demande
+                if demande.transporteur_livraison == request.user.transporteur:
+                    # Accept the demande
+                    demande.transporteur_confirme = True
+                    demande.statut = 'validee'
+                    demande.save()
+                    
+                    messages.success(request, f"Mission #{demande.id} acceptée !")
+                    return redirect('mes_missions_acceptees')
+                else:
+                    messages.error(request, "Vous n'êtes pas autorisé à accepter cette mission.")
+    
+    # Get ACTIVE propositions (not terminated)
+    propositions = PropositionDon.objects.filter(
+        transporteur_assignee=request.user.transporteur,
+        transporteur_statut='acceptee'
+    ).exclude(statut='terminee').order_by('-date_proposition')
+    
+    # Get TERMINATED propositions
+    terminated_propositions = PropositionDon.objects.filter(
+        transporteur_assignee=request.user.transporteur,
+        transporteur_statut='acceptee',
+        statut='terminee'
+    ).order_by('-date_validation')
+    
+    # Get ACTIVE demands (not terminated)
+    demandes = DemandeDon.objects.filter(
+        transporteur_livraison=request.user.transporteur
+    ).exclude(statut='terminee').order_by('-date_demande')
+    
+    # Get TERMINATED demands
+    terminated_demandes = DemandeDon.objects.filter(
+        transporteur_livraison=request.user.transporteur,
+        statut='terminee'
+    ).order_by('-date_validation')
+    
+    context = {
+        'propositions': propositions,
+        'demandes': demandes,
+        'terminated_propositions': terminated_propositions,
+        'terminated_demandes': terminated_demandes,
+    }
+    
+    return render(request, 'donations/propositions/mes_missions_acceptees.html', context)
 # ============ NOTIFICATION VIEWS ============
 @login_required
 def transporteur_notifications(request):

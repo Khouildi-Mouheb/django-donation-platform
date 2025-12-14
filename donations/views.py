@@ -621,41 +621,40 @@ def confirmer_remise_donateur(request, proposition_id):
     return redirect('mes_propositions')
 
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from .models import DemandeDon
+
 @login_required
 def confirmer_reception_demande(request, demande_id):
-    """Receiver confirms they received the delivery"""
+    """Allow demandeur to confirm they received their demand"""
+    if not hasattr(request.user, 'participant'):
+        messages.error(request, "Accès non autorisé.")
+        return redirect('dashboard')
+    
     demande = get_object_or_404(DemandeDon, id=demande_id)
     
-    # Security check - only the requester can confirm
-    if not hasattr(request.user, 'participant') or demande.participant_requerant != request.user.participant:
-        messages.error(request, "Accès non autorisé.")
-        return redirect('participant_dashboard')
+    # Check permissions
+    if demande.participant_requerant != request.user.participant:
+        messages.error(request, "Vous n'êtes pas autorisé à confirmer cette réception.")
+        return redirect('mes_demandes')
     
-    # Can only confirm if the demand is completed by transporter
+    # Check if demande is ready for confirmation
     if demande.statut != 'terminee':
-        messages.error(request, "La livraison n'est pas encore terminée.")
+        messages.error(request, "Cette demande n'est pas encore prête pour confirmation de réception.")
         return redirect('mes_demandes')
     
-    if request.method == 'POST':
-        demande.demandeur_confirme_reception = True
-        demande.save()
-        
-        # Notify member that items can be removed from stock
-        if demande.don_attribue and demande.membre_validateur:
-            Notification.objects.create(
-                receiver=demande.membre_validateur,
-                demande=demande,
-                titre=f"Réception confirmée: Demande #{demande.id}",
-                message=f"Le bénéficiaire a confirmé la réception. Vous pouvez retirer le don #{demande.don_attribue.reference} du stock."
-            )
-        
-        messages.success(request, f"✅ Réception confirmée pour la demande #{demande.id}!")
+    if demande.demandeur_confirme_reception:
+        messages.info(request, "Vous avez déjà confirmé la réception de cette demande.")
         return redirect('mes_demandes')
     
-    return render(request, 'donations/demandes/receiver_confirmer_reception.html', {
-        'demande': demande
-    })
-
+    # Confirm reception
+    demande.demandeur_confirme_reception = True
+    demande.save()
+    
+    messages.success(request, "Réception confirmée avec succès !")
+    return redirect('mes_demandes')
 
 # ============ PARTICIPANT VIEWS ============
 @login_required
@@ -663,19 +662,38 @@ def mes_demandes(request):
     """View all demands by the current participant"""
     if not hasattr(request.user, 'participant'):
         messages.error(request, "Accès non autorisé.")
-        return redirect('dashboard')
+        return redirect('home')
     
     # Get all demands by this participant
     demandes = DemandeDon.objects.filter(
         participant_requerant=request.user.participant
     ).order_by('-date_demande')
     
+    # Handle POST request to terminate a demand
+    if request.method == 'POST':
+        demande_id = request.POST.get('demande_id')
+        action = request.POST.get('action')
+        
+        if demande_id and action == 'terminer':
+            demande = get_object_or_404(DemandeDon, id=demande_id)
+            
+            # Check if this participant owns the demand
+            if demande.participant_requerant == request.user.participant:
+                # Terminate the demand
+                demande.statut = 'terminee'
+                demande.demandeur_confirme_reception = True
+                demande.save()
+                
+                messages.success(request, f"Demande #{demande.id} terminée avec succès !")
+                return redirect('mes_demandes')
+            else:
+                messages.error(request, "Vous n'êtes pas autorisé à terminer cette demande.")
+    
     context = {
         'demandes': demandes
     }
     
     return render(request, 'donations/demandes/mes_demandes.html', context)
-
 
 @login_required
 def mes_propositions(request):
@@ -733,22 +751,20 @@ def proposition_details(request, proposition_id):
 
 @login_required
 def mes_missions_acceptees(request):
-    """View missions accepted by the participant (as transporter)"""
+    
     # Check if user is a participant
-    if not hasattr(request.user, 'participant'):
-        messages.error(request, "Accès non autorisé.")
-        return redirect('dashboard')
+   
     
     # Get propositions where the participant is the donor
     propositions = PropositionDon.objects.filter(
-        participant_donateur=request.user.participant
+        participant_donateur=request.user
     ).exclude(statut='en_attente').order_by('-date_proposition')
     
     # Get demands assigned to this participant (if they're also a transporter)
     demandes = DemandeDon.objects.none()
     if hasattr(request.user, 'transporteur'):
         demandes = DemandeDon.objects.filter(
-            transporteur_livraison=request.user.transporteur
+            transporteur_livraison=request.user
         ).exclude(statut='en_attente').order_by('-date_demande')
     
     context = {
