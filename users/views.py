@@ -85,6 +85,46 @@ def login_view(request):
     return render(request, "users/auth/login.html", {"form": form})
 
 
+
+# users/views.py - Add this function
+@login_required
+def transporteur_confirme_proposition(request, proposition_id):
+    """Transporter confirms/rejects a proposition mission."""
+    proposition = get_object_or_404(PropositionDon, id=proposition_id)
+    
+    # Security check
+    if not hasattr(request.user, 'transporteur') or proposition.transporteur_assignee != request.user.transporteur:
+        messages.error(request, "Accès non autorisé.")
+        return redirect('transporteur_dashboard')
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'accepter':
+            proposition.transporteur_statut = 'acceptee'
+            proposition.save()
+            messages.success(request, f"✅ Mission #{proposition.id} acceptée!")
+            return redirect('transporteur_dashboard')
+            
+        elif action == 'refuser':
+            raison_refus = request.POST.get('raison_refus', '')
+            proposition.transporteur_statut = 'refusee'
+            proposition.raison_refus_transporteur = raison_refus
+            proposition.save()
+            messages.warning(request, f"❌ Mission #{proposition.id} refusée.")
+            return redirect('transporteur_dashboard')
+            
+        elif action == 'marquer comme terminer':
+            proposition.statut = 'terminee'
+            proposition.save()
+            messages.success(request, f"✅ Mission #{proposition.id} terminée!")
+            return redirect('transporteur_dashboard')
+    
+    # GET request
+    return render(request, 'users/transporteur/confirme_proposition.html', {
+        'proposition': proposition
+    })
+
 # ============ ADMIN MANAGEMENT VIEWS ============
 @admin_required
 def create_admin(request):

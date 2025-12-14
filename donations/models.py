@@ -86,7 +86,8 @@ class PropositionDon(models.Model):
     transporteur_assignee = models.ForeignKey(Transporteur, on_delete=models.SET_NULL, null=True, blank=True)
     date_ramassage = models.DateField(null=True, blank=True)
     heure_ramassage = models.TimeField(null=True, blank=True)
-
+    transporteur_recoit = models.BooleanField(default=False)  # ✅ Transporter confirms they received from donor
+    transporteur_livre = models.BooleanField(default=False)  # ✅ Transporter confirms they delivered to receiver
     donator_gives = models.BooleanField(default=False)  # ✅
 
 

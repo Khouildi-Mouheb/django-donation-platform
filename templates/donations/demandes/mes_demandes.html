@@ -1,0 +1,534 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Mes Demandes | DonationHub{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="dashboard-header mb-5">
+        <h1 class="display-5 fw-bold">📋 Mes demandes de dons</h1>
+        <p class="lead text-muted">Suivez le statut de vos demandes</p>
+    </div>
+
+    <!-- Demands Grid -->
+    {% if demandes %}
+    <div class="row">
+        {% for demande in demandes %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm border-0 hover-card">
+                <!-- Card Header -->
+                <div class="card-header bg-transparent border-bottom-0 pt-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title fw-bold text-primary mb-0">
+                            Demande #{{ demande.id }}
+                        </h5>
+                        <span class="badge {% if demande.statut == 'en_attente' %}bg-warning{% elif demande.statut == 'validee' %}bg-info{% elif demande.statut == 'en_cours' %}bg-primary{% elif demande.statut == 'en_livraison' %}bg-warning text-dark{% elif demande.statut == 'terminee' %}bg-success{% else %}bg-secondary{% endif %}">
+                            {{ demande.get_statut_display }}
+                        </span>
+                    </div>
+                    <h6 class="fw-semibold mt-2">{{ demande.type_materiel }}</h6>
+                </div>
+
+                <!-- Card Body -->
+                <div class="card-body">
+                    <!-- Basic Info -->
+                    <div class="demand-info mb-3">
+                        <div class="info-item d-flex align-items-center mb-2">
+                            <i class="fas fa-balance-scale text-primary me-2" style="width: 20px;"></i>
+                            <span><strong>Quantité :</strong> {{ demande.quantite_desiree }}</span>
+                        </div>
+                        <div class="info-item d-flex align-items-center mb-2">
+                            <i class="fas fa-exclamation-triangle text-primary me-2" style="width: 20px;"></i>
+                            <span><strong>Urgence :</strong> 
+                                <span class="badge {% if demande.urgence == 'urgente' or demande.urgence == 'elevee' %}bg-danger{% elif demande.urgence == 'moyenne' %}bg-warning text-dark{% else %}bg-info{% endif %}">
+                                    {{ demande.get_urgence_display }}
+                                </span>
+                            </span>
+                        </div>
+                        <div class="info-item d-flex align-items-start mb-2">
+                            <i class="fas fa-align-left text-primary me-2 mt-1" style="width: 20px;"></i>
+                            <span><strong>Description :</strong> {{ demande.description_besoin|truncatechars:50 }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Status Timeline -->
+                    <div class="status-timeline mb-3">
+                        <div class="timeline-item {% if demande.date_demande %}active{% endif %}">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <small>Demandé le {{ demande.date_demande|date:"d/m/Y" }}</small>
+                            </div>
+                        </div>
+                        
+                        {% if demande.date_validation %}
+                        <div class="timeline-item active">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <small>Validé le {{ demande.date_validation|date:"d/m/Y" }}</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if demande.transporteur_livraison %}
+                        <div class="timeline-item {% if demande.transporteur_livraison %}active{% endif %}">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <small>Transport assigné</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if demande.date_livraison %}
+                        <div class="timeline-item {% if demande.date_livraison %}active{% endif %}">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <small>Livré le {{ demande.date_livraison|date:"d/m/Y" }}</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if demande.demandeur_confirme_reception %}
+                        <div class="timeline-item active">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <small>Réception confirmée</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Transporteur Info -->
+                    {% if demande.transporteur_livraison %}
+                    <div class="transporteur-info bg-light p-3 rounded mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-truck text-success me-2"></i>
+                            <strong>Transporteur assigné</strong>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="mb-0 small">{{ demande.transporteur_livraison.user.username }}</p>
+                                <small class="text-muted">
+                                    {% if demande.transporteur_confirme %}
+                                    <i class="fas fa-check text-success"></i> Mission acceptée
+                                    {% else %}
+                                    <i class="fas fa-clock text-warning"></i> En attente d'acceptation
+                                    {% endif %}
+                                </small>
+                            </div>
+                            
+                            <!-- Receiver confirms reception -->
+                            {% if demande.statut == 'terminee' and not demande.demandeur_confirme_reception %}
+                            <a href="{% url 'confirmer_reception_demande' demande.id %}" 
+                               class="btn btn-success btn-sm">
+                                <i class="fas fa-check me-1"></i> Confirmer réception
+                            </a>
+                            {% elif demande.demandeur_confirme_reception %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check me-1"></i> Reçu
+                            </span>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Delivery status -->
+                        {% if demande.transporteur_confirme %}
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                {% if demande.statut == 'terminee' %}
+                                Livraison terminée
+                                {% elif demande.statut == 'en_livraison' %}
+                                En cours de livraison
+                                {% else %}
+                                Prêt pour livraison
+                                {% endif %}
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Donation Info -->
+                    {% if demande.don_attribue %}
+                    <div class="donation-info bg-success bg-opacity-10 p-3 rounded mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-gift text-success me-2"></i>
+                            <strong>Don attribué</strong>
+                        </div>
+                        <p class="mb-0 small">Proposition #{{ demande.don_attribue.id }} par {{ demande.don_attribue.participant_donateur.username }}</p>
+                        {% if demande.don_attribue %}
+                        <a href="{% url 'chat_room' user.id demande.don_attribue.participant_donateur.id %}" 
+                           class="btn btn-outline-primary btn-sm mt-2">
+                            <i class="fas fa-comment"></i> Contacter
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Card Footer -->
+                <div class="card-footer bg-transparent border-top-0 pb-3">
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                data-bs-toggle="modal" data-bs-target="#detailsModal{{ demande.id }}">
+                            <i class="fas fa-info-circle"></i> Détails
+                        </button>
+                        
+                        {% if demande.statut == 'terminee' and not demande.demandeur_confirme_reception %}
+                        <a href="{% url 'confirmer_reception_demande' demande.id %}" 
+                           class="btn btn-success btn-sm">
+                            <i class="fas fa-check-circle me-1"></i> Confirmer réception
+                        </a>
+                        {% elif demande.demandeur_confirme_reception %}
+                        <span class="badge bg-success p-2">
+                            <i class="fas fa-check me-1"></i> Réception confirmée
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Quick Status -->
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>Date création:</span>
+                            <span>{{ demande.date_demande|date:"d/m/Y" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Details Modal -->
+            <div class="modal fade" id="detailsModal{{ demande.id }}" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Détails de la demande #{{ demande.id }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Informations de base</h6>
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item d-flex justify-content-between">
+                                            <span>Type de matériel:</span>
+                                            <strong>{{ demande.type_materiel }}</strong>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between">
+                                            <span>Catégorie:</span>
+                                            <strong>{{ demande.categorie_recherchee.nom }}</strong>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between">
+                                            <span>Quantité désirée:</span>
+                                            <strong>{{ demande.quantite_desiree }}</strong>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between">
+                                            <span>Urgence:</span>
+                                            <strong>{{ demande.get_urgence_display }}</strong>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Informations de livraison</h6>
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item">
+                                            <strong>Adresse:</strong><br>
+                                            {{ demande.adresse_livraison }}
+                                        </li>
+                                        <li class="list-group-item">
+                                            <strong>Ville:</strong> {{ demande.ville }}
+                                        </li>
+                                        <li class="list-group-item">
+                                            <strong>Code postal:</strong> {{ demande.code_postal }}
+                                        </li>
+                                        <li class="list-group-item">
+                                            <strong>Disponibilité:</strong> {{ demande.disponibilite_livraison|default:"Non spécifiée" }}
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- Description -->
+                            {% if demande.description_besoin %}
+                            <div class="mt-3">
+                                <h6>Description du besoin</h6>
+                                <p class="p-3 bg-light rounded">{{ demande.description_besoin }}</p>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Status Details -->
+                            <div class="mt-3">
+                                <h6>Historique du statut</h6>
+                                <div class="timeline-detailed">
+                                    <div class="timeline-item-detailed">
+                                        <div class="timeline-date">{{ demande.date_demande|date:"d/m/Y H:i" }}</div>
+                                        <div class="timeline-content">
+                                            <strong>Demande créée</strong>
+                                            <p class="mb-0 small">Vous avez créé cette demande</p>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if demande.date_validation %}
+                                    <div class="timeline-item-detailed">
+                                        <div class="timeline-date">{{ demande.date_validation|date:"d/m/Y H:i" }}</div>
+                                        <div class="timeline-content">
+                                            <strong>Demande validée</strong>
+                                            <p class="mb-0 small">Validée par {{ demande.membre_validateur.username }}</p>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if demande.don_attribue %}
+                                    <div class="timeline-item-detailed">
+                                        <div class="timeline-date">{{ demande.date_attribution|date:"d/m/Y H:i"|default:"-" }}</div>
+                                        <div class="timeline-content">
+                                            <strong>Don attribué</strong>
+                                            <p class="mb-0 small">Proposition #{{ demande.don_attribue.id }} assignée</p>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if demande.transporteur_livraison %}
+                                    <div class="timeline-item-detailed">
+                                        <div class="timeline-date">{{ demande.transporteur_date_reponse|date:"d/m/Y H:i"|default:"-" }}</div>
+                                        <div class="timeline-content">
+                                            <strong>Transporteur assigné</strong>
+                                            <p class="mb-0 small">{{ demande.transporteur_livraison.user.username }}</p>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if demande.statut == 'terminee' %}
+                                    <div class="timeline-item-detailed">
+                                        <div class="timeline-date">{{ demande.date_livraison|date:"d/m/Y"|default:"Aujourd'hui" }}</div>
+                                        <div class="timeline-content">
+                                            <strong>Livraison terminée</strong>
+                                            <p class="mb-0 small">Transporteur a marqué la livraison comme terminée</p>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if demande.demandeur_confirme_reception %}
+                                    <div class="timeline-item-detailed">
+                                        <div class="timeline-date">Maintenant</div>
+                                        <div class="timeline-content">
+                                            <strong>Réception confirmée</strong>
+                                            <p class="mb-0 small">Vous avez confirmé la réception des articles</p>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Action Buttons in Modal -->
+                            <div class="mt-4">
+                                {% if demande.statut == 'terminee' and not demande.demandeur_confirme_reception %}
+                                <a href="{% url 'confirmer_reception_demande' demande.id %}" 
+                                   class="btn btn-success w-100">
+                                    <i class="fas fa-check-circle me-2"></i> Confirmer la réception
+                                </a>
+                                {% elif demande.demandeur_confirme_reception %}
+                                <div class="alert alert-success text-center">
+                                    <i class="fas fa-check-circle me-2"></i> Réception confirmée
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state text-center py-5">
+        <div class="empty-state-icon mb-4">
+            <i class="fas fa-hand-holding-heart fa-4x text-muted"></i>
+        </div>
+        <h4 class="mb-3">Aucune demande de don</h4>
+        <p class="text-muted mb-4">Vous n'avez pas encore fait de demande. Exprimez vos besoins !</p>
+        <a href="{% url 'create_demande' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-plus-circle me-2"></i> Faire une demande
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.dashboard-header {
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 15px;
+    margin-top: 1rem;
+}
+
+.hover-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #e0e0e0;
+}
+
+.hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+}
+
+.info-item {
+    font-size: 0.9rem;
+}
+
+/* Status Timeline */
+.status-timeline {
+    position: relative;
+    padding-left: 20px;
+}
+
+.status-timeline::before {
+    content: '';
+    position: absolute;
+    left: 9px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: -21px;
+    top: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #dee2e6;
+    border: 2px solid white;
+}
+
+.timeline-item.active .timeline-dot {
+    background: #28a745;
+}
+
+.timeline-content {
+    padding-left: 5px;
+}
+
+/* Detailed Timeline */
+.timeline-detailed {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-detailed::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, #28a745, #007bff);
+}
+
+.timeline-item-detailed {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-item-detailed::before {
+    content: '';
+    position: absolute;
+    left: -32px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #28a745;
+    border: 3px solid white;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.2);
+}
+
+.timeline-date {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+/* Transporteur Info */
+.transporteur-info {
+    border-left: 3px solid #28a745;
+}
+
+.donation-info {
+    border-left: 3px solid #17a2b8;
+}
+
+/* Empty State */
+.empty-state {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    border: 2px dashed #dee2e6;
+    padding: 4rem 2rem;
+}
+
+.empty-state-icon {
+    opacity: 0.6;
+}
+
+/* Badge Styles */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.5em 1em;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dashboard-header {
+        padding: 1.5rem;
+    }
+    
+    .status-timeline {
+        padding-left: 15px;
+    }
+    
+    .timeline-detailed {
+        padding-left: 20px;
+    }
+    
+    .timeline-item-detailed::before {
+        left: -26px;
+    }
+}
+</style>
+
+<script>
+// Modal auto-focus
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle modal show events
+    var modals = document.querySelectorAll('.modal');
+    modals.forEach(function(modal) {
+        modal.addEventListener('shown.bs.modal', function() {
+            // Focus on first button in modal
+            var btn = this.querySelector('button, a, input');
+            if (btn) btn.focus();
+        });
+    });
+    
+    // Update badge colors based on status
+    document.querySelectorAll('.card').forEach(function(card) {
+        var statusBadge = card.querySelector('.badge');
+        if (statusBadge) {
+            var status = statusBadge.textContent.toLowerCase();
+            if (status.includes('terminée') || status.includes('terminee')) {
+                statusBadge.classList.remove('bg-warning', 'bg-info', 'bg-primary');
+                statusBadge.classList.add('bg-success');
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

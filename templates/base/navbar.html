@@ -1,122 +1,284 @@
-{% load static %}
-<nav class="navbar navbar-expand-lg navbar-custom">
+<!-- base/base.html - Navbar Section -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
     <div class="container">
-        <!-- Brand/Logo -->
-        <a class="navbar-brand" href="{% url 'home' %}">
-            <img src="{% static 'images/logo.png' %}" alt="Logo" height="40">
-            <span class="brand-text">DonationHub</span>
+        <!-- Logo and Brand -->
+        <a class="navbar-brand fw-bold" href="{% url 'home' %}">
+            <i class="fas fa-hands-helping me-2"></i>DonationHub
         </a>
-        
-        <!-- Mobile Toggle Button -->
+
+        <!-- Mobile Toggle -->
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
             <span class="navbar-toggler-icon"></span>
         </button>
-        
+
         <!-- Navbar Content -->
         <div class="collapse navbar-collapse" id="navbarContent">
-            <!-- Left Side - Public Links -->
+            <!-- Left Navigation Items -->
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'home' %}">Home</a>
+                    <a class="nav-link" href="{% url 'home' %}">
+                        <i class="fas fa-home me-1"></i> Accueil
+                    </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'stock_list' %}">Available Donations</a>
-                </li>
+                
+                <!-- Show different items based on user type -->
                 {% if user.is_authenticated %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'create_proposition' %}">Donate Items</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'create_demande' %}">Request Items</a>
-                </li>
-                {% endif %}
-            </ul>
-            
-            <!-- Right Side - User & Auth -->
-            <ul class="navbar-nav">
-                {% if user.is_authenticated %}
-                    <!-- Role-Based Admin Links -->
-                    {% if user.user_type == "admin" %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            Admin Management
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{% url 'create_admin' %}">Create Admin</a></li>
-                            <li><a class="dropdown-item" href="{% url 'create_membre' %}">Create Member</a></li>
-                            <li><a class="dropdown-item" href="{% url 'create_transporteur' %}">Create Transporter</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#">User Management</a></li>
-                            <li><a class="dropdown-item" href="#">System Reports</a></li>
-                        </ul>
-                    </li>
-                    {% endif %}
-                    
-                    <!-- Role-Based Member Links -->
-                    {% if user.user_type == "membre" %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'membre_dashboard' %}">Member Dashboard</a>
-                    </li>
-                    {% endif %}
-                    
-                    <!-- Role-Based Transporteur Links -->
-                    {% if user.user_type == "transporteur" %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            Transporteur
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{% url 'transporteur_dashboard' %}">Dashboard</a></li>
-                            <li><a class="dropdown-item" href="{% url 'transporteur_notifications' %}">
-                                Notifications 
-                                {% if user.transporteur.unread_notifications_count %}
-                                <span class="badge bg-danger">{{ user.transporteur.unread_notifications_count }}</span>
-                                {% endif %}
-                            </a></li>
-                        </ul>
-                    </li>
-                    {% endif %}
-                    
-                    <!-- Role-Based Participant Links -->
                     {% if user.user_type == "participant" %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'participant_donations' %}">My Donations</a>
-                    </li>
-                    {% endif %}
-                    
-                    <!-- User Dropdown -->
+                    <!-- PARTICIPANT MENU -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user"></i> {{ user.username }}
+                            <i class="fas fa-hand-holding-heart me-1"></i> Dons
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#">
-                                <i class="fas fa-id-badge"></i> Role: {{ user.get_user_type_display|default:user.user_type }}
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-user-cog"></i> Profile</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog"></i> Settings</a></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'create_proposition' %}">
+                                    <i class="fas fa-plus-circle me-2"></i> Proposer un don
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'create_demande' %}">
+                                    <i class="fas fa-hand-paper me-2"></i> Faire une demande
+                                </a>
+                            </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <form method="post" action="{% url 'logout' %}">
-                                    {% csrf_token %}
-                                    <button type="submit" class="dropdown-item">
-                                        <i class="fas fa-sign-out-alt"></i> Logout
-                                    </button>
-                                </form>
+                                <a class="dropdown-item" href="{% url 'mes_propositions' %}">
+                                    <i class="fas fa-box-open me-2"></i> Mes propositions
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'mes_demandes' %}">
+                                    <i class="fas fa-clipboard-list me-2"></i> Mes demandes
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    {% elif user.user_type == "transporteur" %}
+                    <!-- TRANSPORTER MENU -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'transporteur_notifications' %}">
+                            <i class="fas fa-bell me-1"></i> Notifications
+                            {% if hasattr.user.transporteur.unread_notifications_count %}
+                            <span class="badge bg-danger">{{ user.transporteur.unread_notifications_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'transporteur_dashboard' %}">
+                            <i class="fas fa-tachometer-alt me-1"></i> Tableau de bord
+                        </a>
+                    </li>
+                    
+                    {% elif user.user_type == "membre" %}
+                    <!-- MEMBER MENU -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'membre_dashboard' %}">
+                            <i class="fas fa-tachometer-alt me-1"></i> Tableau de bord
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-box-open me-1"></i> Propositions
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'membre_dashboard' %}">
+                                    <i class="fas fa-list me-2"></i> Toutes les propositions
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-clipboard-list me-1"></i> Demandes
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'membre_dashboard' %}">
+                                    <i class="fas fa-list me-2"></i> Toutes les demandes
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'stock_list' %}">
+                            <i class="fas fa-warehouse me-1"></i> Stock
+                        </a>
+                    </li>
+                    
+                    {% elif user.user_type == "admin" %}
+                    <!-- ADMIN MENU -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-users me-1"></i> Création
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'create_membre' %}">
+                                    <i class="fas fa-user-shield me-2"></i> Créer un membre
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'create_transporteur' %}">
+                                    <i class="fas fa-truck me-2"></i> Créer un transporteur
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'create_admin' %}">
+                                    <i class="fas fa-user-lock me-2"></i> Créer un admin
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/">
+                            <i class="fas fa-cogs me-1"></i> Interface Admin
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                {% else %}
+                    <!-- Public Menu (Not logged in) -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'register' %}">
+                            <i class="fas fa-user-plus me-1"></i> S'inscrire
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+
+            <!-- Right Navigation Items -->
+            <ul class="navbar-nav ms-auto">
+                {% if user.is_authenticated %}
+                    <!-- User Profile Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                            <div class="avatar-circle bg-light text-primary me-2">
+                                {{ user.username|first|upper }}
+                            </div>
+                            <span class="me-1">{{ user.username }}</span>
+                            <small class="badge bg-light text-dark ms-1">{{ user.get_user_type_display }}</small>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-user me-2"></i> {{ user.username }}
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'logout' %}">
+                                    <i class="fas fa-sign-out-alt me-2"></i> Déconnexion
+                                </a>
                             </li>
                         </ul>
                     </li>
                 {% else %}
-                    <!-- Login/Register Links -->
+                    <!-- Login Button -->
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}">Login</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'register' %}">Register</a>
+                        <a class="nav-link" href="{% url 'login' %}">
+                            <i class="fas fa-sign-in-alt me-1"></i> Connexion
+                        </a>
                     </li>
                 {% endif %}
             </ul>
         </div>
     </div>
 </nav>
+
+<style>
+.avatar-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.navbar {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.nav-link {
+    padding: 0.5rem 1rem;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+}
+
+.badge {
+    font-size: 0.6rem;
+    padding: 0.25em 0.5em;
+}
+
+/* Mobile optimization */
+@media (max-width: 992px) {
+    .navbar-collapse {
+        padding: 1rem 0;
+    }
+    
+    .nav-link {
+        padding: 0.5rem 0;
+    }
+    
+    .dropdown-menu {
+        border: none;
+        box-shadow: none;
+        background-color: transparent;
+    }
+    
+    .dropdown-item {
+        padding-left: 1.5rem;
+    }
+}
+</style>
+
+<!-- Script for mobile dropdowns -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle dropdown hover on desktop
+    const dropdowns = document.querySelectorAll('.nav-item.dropdown');
+    
+    if (window.innerWidth > 992) {
+        dropdowns.forEach(function(dropdown) {
+            dropdown.addEventListener('mouseenter', function() {
+                this.querySelector('.dropdown-toggle').click();
+            });
+            
+            dropdown.addEventListener('mouseleave', function() {
+                this.querySelector('.dropdown-toggle').click();
+            });
+        });
+    }
+    
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.navbar')) {
+            const navbar = document.querySelector('.navbar-collapse');
+            if (navbar.classList.contains('show')) {
+                const toggler = document.querySelector('.navbar-toggler');
+                if (toggler) toggler.click();
+            }
+        }
+    });
+});
+</script>

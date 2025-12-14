@@ -1,0 +1,498 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Confirmer Réception | DonationHub{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="dashboard-header mb-5">
+        <h1 class="display-5 fw-bold">
+            <i class="fas fa-check-circle me-2"></i> Confirmer la réception
+        </h1>
+        <p class="lead text-muted">Confirmez avoir reçu votre don</p>
+    </div>
+
+    <!-- Confirmation Card -->
+    <div class="card shadow-lg border-0 mb-5">
+        <div class="card-header bg-success text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-box-open me-2"></i> Détails de la livraison
+                </h4>
+                <span class="badge bg-light text-success fs-6">Demande #{{ demande.id }}</span>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <!-- Status Indicator -->
+            <div class="delivery-progress mb-5">
+                <div class="d-flex justify-content-between position-relative">
+                    <!-- Step 1: Demande validée -->
+                    <div class="step completed">
+                        <div class="step-circle">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="step-label">Demande validée</div>
+                    </div>
+                    
+                    <!-- Step 2: Transport assigné -->
+                    <div class="step completed">
+                        <div class="step-circle">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="step-label">Transport assigné</div>
+                    </div>
+                    
+                    <!-- Step 3: Livraison terminée -->
+                    <div class="step completed">
+                        <div class="step-circle">
+                            <i class="fas fa-flag-checkered"></i>
+                        </div>
+                        <div class="step-label">Livraison effectuée</div>
+                    </div>
+                    
+                    <!-- Step 4: Réception -->
+                    <div class="step active">
+                        <div class="step-circle">4</div>
+                        <div class="step-label">Confirmation</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Left Column - Item Details -->
+                <div class="col-md-6 mb-4">
+                    <h5 class="fw-bold text-primary mb-3">
+                        <i class="fas fa-box me-2"></i> Articles reçus
+                    </h5>
+                    
+                    <div class="item-card bg-light p-4 rounded">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="item-icon bg-primary text-white me-3">
+                                <i class="fas fa-gift fa-2x"></i>
+                            </div>
+                            <div>
+                                <h4 class="fw-bold mb-1">{{ demande.type_materiel }}</h4>
+                                <p class="text-muted mb-0">Catégorie: {{ demande.categorie_recherchee.nom }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="item-details">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Quantité reçue:</span>
+                                <strong class="text-success">{{ demande.quantite_desiree }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Date de livraison:</span>
+                                <strong>{{ demande.date_livraison|date:"d/m/Y"|default:"Aujourd'hui" }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Transporteur:</span>
+                                <strong>{{ demande.transporteur_livraison.user.username|default:"Non spécifié" }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Delivery Details -->
+                <div class="col-md-6 mb-4">
+                    <h5 class="fw-bold text-primary mb-3">
+                        <i class="fas fa-map-marker-alt me-2"></i> Livraison effectuée à
+                    </h5>
+                    
+                    <div class="delivery-card bg-light p-4 rounded">
+                        <div class="delivery-address mb-3">
+                            <h6 class="fw-bold mb-2">
+                                <i class="fas fa-home me-2 text-primary"></i> Adresse de livraison
+                            </h6>
+                            <p class="mb-1">{{ demande.adresse_livraison }}</p>
+                            <p class="mb-3 text-muted">{{ demande.ville }}, {{ demande.code_postal }}</p>
+                        </div>
+                        
+                        <div class="delivery-time mb-3">
+                            <h6 class="fw-bold mb-2">
+                                <i class="fas fa-clock me-2 text-primary"></i> Disponibilité indiquée
+                            </h6>
+                            <p class="mb-0">{{ demande.disponibilite_livraison|default:"Non spécifiée" }}</p>
+                        </div>
+                        
+                        {% if demande.description_besoin %}
+                        <div class="delivery-notes">
+                            <h6 class="fw-bold mb-2">
+                                <i class="fas fa-sticky-note me-2 text-primary"></i> Notes additionnelles
+                            </h6>
+                            <p class="mb-0 small bg-white p-2 rounded">{{ demande.description_besoin }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confirmation Form -->
+            <div class="confirmation-section mt-5">
+                <div class="alert alert-info d-flex align-items-center mb-4">
+                    <i class="fas fa-info-circle me-3 fa-2x"></i>
+                    <div>
+                        <h5 class="alert-heading mb-2">Confirmation finale</h5>
+                        <p class="mb-0">Veuillez vérifier que vous avez bien reçu les articles mentionnés ci-dessus avant de confirmer.</p>
+                    </div>
+                </div>
+                
+                <form method="post" id="confirmationForm">
+                    {% csrf_token %}
+                    
+                    <div class="confirmation-checks bg-light p-4 rounded mb-4">
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-clipboard-check text-primary me-2"></i> 
+                            Veuillez cocher toutes les affirmations vraies :
+                        </h6>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="confirmReceived" required>
+                            <label class="form-check-label" for="confirmReceived">
+                                <strong>J'ai bien reçu les articles listés ci-dessus</strong>
+                            </label>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="confirmQuantity" required>
+                            <label class="form-check-label" for="confirmQuantity">
+                                <strong>La quantité reçue correspond à celle demandée ({{ demande.quantite_desiree }})</strong>
+                            </label>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="confirmCondition" required>
+                            <label class="form-check-label" for="confirmCondition">
+                                <strong>Les articles sont en bon état et utilisables</strong>
+                            </label>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="confirmMatch" required>
+                            <label class="form-check-label" for="confirmMatch">
+                                <strong>Les articles correspondent à ma demande initiale</strong>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Rating (Optional) -->
+                    <div class="rating-section mb-4">
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-star text-warning me-2"></i> 
+                            Évaluation du service (optionnel)
+                        </h6>
+                        
+                        <div class="star-rating mb-3">
+                            <div class="stars">
+                                {% for i in "12345" %}
+                                <i class="far fa-star rating-star" data-value="{{ i }}"></i>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" name="rating" id="ratingValue" value="0">
+                            <div id="ratingText" class="small text-muted mt-1">Cliquez sur les étoiles pour noter</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="feedback" class="form-label fw-bold">Commentaires (optionnel)</label>
+                            <textarea name="feedback" id="feedback" class="form-control" rows="3" 
+                                      placeholder="Partagez votre expérience ou des suggestions..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-success btn-lg px-5" id="confirmBtn">
+                            <i class="fas fa-check-circle me-2"></i> Confirmer la réception
+                        </button>
+                        
+                        <a href="{% url 'mes_demandes' %}" class="btn btn-outline-secondary btn-lg ms-3">
+                            <i class="fas fa-times me-2"></i> Retour
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.dashboard-header {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 15px;
+    margin-top: 1rem;
+}
+
+.card {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 1.5rem;
+    border-bottom: none;
+}
+
+/* Delivery Progress */
+.delivery-progress {
+    position: relative;
+    padding: 0 20px;
+}
+
+.delivery-progress .d-flex::before {
+    content: '';
+    position: absolute;
+    top: 25px;
+    left: 50px;
+    right: 50px;
+    height: 3px;
+    background: linear-gradient(to right, #28a745 0%, #28a745 75%, #e0e0e0 75%);
+    z-index: 1;
+}
+
+.step {
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    flex: 1;
+}
+
+.step-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin: 0 auto 10px;
+    transition: all 0.3s ease;
+}
+
+.step.completed .step-circle {
+    background: #28a745;
+    color: white;
+}
+
+.step.active .step-circle {
+    background: #ffc107;
+    color: #212529;
+    box-shadow: 0 0 0 5px rgba(255, 193, 7, 0.2);
+}
+
+.step-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #666;
+}
+
+.step.active .step-label,
+.step.completed .step-label {
+    color: #28a745;
+    font-weight: 600;
+}
+
+/* Item and Delivery Cards */
+.item-card, .delivery-card {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.item-card:hover, .delivery-card:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.item-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Star Rating */
+.star-rating .stars {
+    font-size: 2rem;
+    cursor: pointer;
+}
+
+.star-rating .fa-star {
+    color: #ddd;
+    margin-right: 5px;
+    transition: color 0.2s;
+}
+
+.star-rating .fa-star:hover,
+.star-rating .fa-star.active,
+.star-rating .fa-star.hover {
+    color: #ffc107;
+}
+
+/* Form Checks */
+.form-check-input:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+/* Confirmation Checks */
+.confirmation-checks {
+    border: 2px solid #dee2e6;
+}
+
+.confirmation-checks .form-check-label {
+    font-size: 1rem;
+}
+
+/* Buttons */
+.btn-lg {
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    font-weight: 600;
+    min-width: 180px;
+}
+
+#confirmBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dashboard-header {
+        padding: 1.5rem;
+    }
+    
+    .delivery-progress {
+        padding: 0 10px;
+    }
+    
+    .delivery-progress .d-flex::before {
+        left: 40px;
+        right: 40px;
+    }
+    
+    .step-circle {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+        min-width: 150px;
+    }
+    
+    .item-icon {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .star-rating .stars {
+        font-size: 1.5rem;
+    }
+}
+
+/* Alert Custom */
+.alert-info {
+    background-color: #e8f4f8;
+    border-color: #b6e0fe;
+    color: #055160;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Star Rating
+    const stars = document.querySelectorAll('.rating-star');
+    const ratingValue = document.getElementById('ratingValue');
+    const ratingText = document.getElementById('ratingText');
+    
+    stars.forEach(star => {
+        star.addEventListener('mouseover', function() {
+            const value = parseInt(this.getAttribute('data-value'));
+            highlightStars(value);
+            updateRatingText(value);
+        });
+        
+        star.addEventListener('mouseout', function() {
+            const currentValue = parseInt(ratingValue.value);
+            highlightStars(currentValue);
+            updateRatingText(currentValue);
+        });
+        
+        star.addEventListener('click', function() {
+            const value = parseInt(this.getAttribute('data-value'));
+            ratingValue.value = value;
+            highlightStars(value);
+            updateRatingText(value);
+        });
+    });
+    
+    function highlightStars(value) {
+        stars.forEach(star => {
+            const starValue = parseInt(star.getAttribute('data-value'));
+            star.classList.remove('active', 'hover');
+            if (starValue <= value) {
+                star.classList.add('hover');
+            }
+            if (starValue <= parseInt(ratingValue.value)) {
+                star.classList.add('active');
+            }
+        });
+    }
+    
+    function updateRatingText(value) {
+        const texts = [
+            "Cliquez sur les étoiles pour noter",
+            "Médiocre",
+            "Passable",
+            "Bien",
+            "Très bien",
+            "Excellent"
+        ];
+        ratingText.textContent = texts[value];
+    }
+    
+    // Form validation
+    const confirmationForm = document.getElementById('confirmationForm');
+    const checkboxes = confirmationForm.querySelectorAll('.form-check-input[required]');
+    const confirmBtn = document.getElementById('confirmBtn');
+    
+    function validateForm() {
+        const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+        confirmBtn.disabled = !allChecked;
+    }
+    
+    // Add event listeners to checkboxes
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', validateForm);
+    });
+    
+    // Initial validation
+    validateForm();
+    
+    // Form submission
+    confirmationForm.addEventListener('submit', function(e) {
+        const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+        if (!allChecked) {
+            e.preventDefault();
+            alert('Veuillez cocher toutes les cases de confirmation avant de soumettre.');
+            return false;
+        }
+        
+        // Show loading state
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Confirmation...';
+        confirmBtn.disabled = true;
+        
+        return true;
+    });
+});
+</script>
+{% endblock %}

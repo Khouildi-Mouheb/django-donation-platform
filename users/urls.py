@@ -8,7 +8,8 @@ from .views import (
     terminer_proposition, 
     get_user,
       marquer_demande_terminee_transporteur ,
-    demandes_de_recuperateur # ✅ make sure this is imported
+    demandes_de_recuperateur, # ✅ make sure this is imported
+    transporteur_confirme_proposition,
 )
 
 
@@ -53,6 +54,15 @@ path("dashboard/transporteur/demande/<int:demande_id>/terminer/",
     
 
    path('demandes_recuperateur/<int:user_id>/',demandes_de_recuperateur,name="demandes_de_recuperateur"),
+
+   path("dashboard/transporteur/proposition/confirme/<int:proposition_id>/",
+     transporteur_reponse,  # You can reuse the same view
+     name="transporteur_confirme_proposition"),
+
+  # users/urls.py
+path("dashboard/transporteur/proposition/confirme/<int:proposition_id>/",
+     transporteur_confirme_proposition,
+     name="transporteur_confirme_proposition"),
 
     
 
